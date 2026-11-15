@@ -9,6 +9,8 @@ export type InputFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   labelAside?: ReactNode;
   /** Contenido a la derecha dentro del input (p. ej. botón de mostrar contraseña). */
   trailing?: ReactNode;
+  /** Estilo de fondo del campo: "surface" por defecto o "inset" dentro de tarjetas. */
+  variant?: "surface" | "inset";
   error?: string;
 };
 
@@ -17,6 +19,7 @@ export function InputField({
   icon,
   labelAside,
   trailing,
+  variant = "surface",
   error,
   id,
   className,
@@ -40,7 +43,8 @@ export function InputField({
 
       <div
         className={cn(
-          "group flex h-11 items-center gap-2.5 rounded-lg border bg-surface px-3 transition-colors",
+          "group flex h-11 items-center gap-2.5 rounded-lg border px-3 transition-colors",
+          variant === "inset" ? "bg-background/80" : "bg-surface",
           "focus-within:border-primary/70 focus-within:ring-2 focus-within:ring-primary/20",
           error ? "border-danger/70" : "border-border hover:border-border-strong",
         )}

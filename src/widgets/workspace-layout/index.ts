@@ -1,0 +1,2 @@
+export { WorkspaceLayout } from "./ui/workspace-layout";
+

@@ -1,2 +1,1 @@
-export { Badge } from "./badge";
-
+export { Badge, type BadgeVariant } from "./badge";

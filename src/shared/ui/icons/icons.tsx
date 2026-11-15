@@ -62,6 +62,15 @@ export function ArrowRightIcon(props: IconProps) {
   );
 }
 
+export function ArrowLeftIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M19 12H5" />
+      <path d="m11 18-6-6 6-6" />
+    </svg>
+  );
+}
+
 export function ChartIcon(props: IconProps) {
   return (
     <svg {...strokeIcon} {...props}>
@@ -76,6 +85,383 @@ export function ClockIcon(props: IconProps) {
     <svg {...strokeIcon} {...props}>
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
+export function SearchIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+  );
+}
+
+export function DownloadIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <path d="M7 10l5 5 5-5" />
+      <path d="M12 15V3" />
+    </svg>
+  );
+}
+
+export function UploadIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <path d="m17 8-5-5-5 5" />
+      <path d="M12 3v12" />
+    </svg>
+  );
+}
+
+export function CloudUploadIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2" />
+      <path d="M12 12v9" />
+      <path d="m16 16-4-4-4 4" />
+    </svg>
+  );
+}
+
+export function FolderIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
+    </svg>
+  );
+}
+
+export function FolderChartIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
+      <path d="M9 15v-3" />
+      <path d="M12 15v-5" />
+      <path d="M15 15v-2" />
+    </svg>
+  );
+}
+
+export function FileTableIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+      <path d="M14 2v6h6" />
+      <path d="M8 13h8" />
+      <path d="M8 17h8" />
+    </svg>
+  );
+}
+
+export function NetworkIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <circle cx="12" cy="5" r="2.5" />
+      <circle cx="5" cy="18" r="2.5" />
+      <circle cx="19" cy="18" r="2.5" />
+      <path d="M10.5 7 6.5 16" />
+      <path d="M13.5 7 17.5 16" />
+      <path d="M7.5 18h9" />
+    </svg>
+  );
+}
+
+export function ChevronsUpDownIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="m7 15 5 5 5-5" />
+      <path d="m7 9 5-5 5 5" />
+    </svg>
+  );
+}
+
+export function ChevronDownIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+export function ChevronRightIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  );
+}
+
+export function FileEditIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="M18.37 2.63a2.12 2.12 0 1 1 3 3L12 15l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
+export function ListIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M8 6h13" />
+      <path d="M8 12h13" />
+      <path d="M8 18h13" />
+      <path d="M3 6h.01" />
+      <path d="M3 12h.01" />
+      <path d="M3 18h.01" />
+    </svg>
+  );
+}
+
+export function BarChartIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M8 16v-5" />
+      <path d="M12 16V8" />
+      <path d="M16 16v-3" />
+    </svg>
+  );
+}
+
+export function ClipboardIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <rect x="8" y="2" width="8" height="4" rx="1" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    </svg>
+  );
+}
+
+export function SlidersIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <line x1="4" x2="20" y1="6" y2="6" />
+      <line x1="4" x2="20" y1="12" y2="12" />
+      <line x1="4" x2="20" y1="18" y2="18" />
+      <circle cx="9" cy="6" r="2" fill="currentColor" />
+      <circle cx="15" cy="12" r="2" fill="currentColor" />
+      <circle cx="9" cy="18" r="2" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function TrendChartIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M3 3v18h18" />
+      <path d="m7 14 4-4 3 3 5-6" />
+    </svg>
+  );
+}
+
+export function PlusCircleIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12h8" />
+      <path d="M12 8v8" />
+    </svg>
+  );
+}
+
+export function CheckCircleIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+export function InfoIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
+  );
+}
+
+export function SettingsIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+    </svg>
+  );
+}
+
+export function UserCogIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <circle cx="10" cy="7" r="4" />
+      <path d="M2 21a8 8 0 0 1 12.2-6.8" />
+      <circle cx="18" cy="18" r="2.5" />
+      <path d="M18 14v1.5" />
+      <path d="M18 20.5V22" />
+      <path d="M14 18h1.5" />
+      <path d="M20.5 18H22" />
+    </svg>
+  );
+}
+
+export function LogOutIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="m16 17 5-5-5-5" />
+      <path d="M21 12H9" />
+    </svg>
+  );
+}
+
+export function TrashIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M3 6h18" />
+      <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+    </svg>
+  );
+}
+
+export function SaveIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z" />
+      <path d="M17 21v-8H7v8" />
+      <path d="M7 3v5h8" />
+    </svg>
+  );
+}
+
+export function IdCardIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <circle cx="8" cy="11" r="2" />
+      <path d="M5 16a3.5 3.5 0 0 1 6 0" />
+      <path d="M14 10h5" />
+      <path d="M14 14h4" />
+    </svg>
+  );
+}
+
+export function PlusIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
+
+export function RefreshIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+      <path d="M21 3v5h-5" />
+      <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+      <path d="M8 16H3v5" />
+    </svg>
+  );
+}
+
+export function UsersIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
+export function LayersIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="m12 2 10 5-10 5L2 7Z" />
+      <path d="m2 12 10 5 10-5" />
+      <path d="m2 17 10 5 10-5" />
+    </svg>
+  );
+}
+
+export function HashIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <line x1="4" x2="20" y1="9" y2="9" />
+      <line x1="4" x2="20" y1="15" y2="15" />
+      <line x1="10" x2="8" y1="3" y2="21" />
+      <line x1="16" x2="14" y1="3" y2="21" />
+    </svg>
+  );
+}
+
+export function PieChartIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+      <path d="M22 12A10 10 0 0 0 12 2v10z" />
+    </svg>
+  );
+}
+
+export function BoltIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+    </svg>
+  );
+}
+
+export function BroomIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="m13 11 9-9" />
+      <path d="M14.6 12.6c.8.8.9 2.1.2 3L10 22l-8-8 6.4-4.8c.9-.7 2.2-.6 3 .2Z" />
+      <path d="m6.8 10.5 6.7 6.7" />
+    </svg>
+  );
+}
+
+export function TableGridIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M3 9h18" />
+      <path d="M3 15h18" />
+      <path d="M9 3v18" />
+    </svg>
+  );
+}
+
+export function ColumnsIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M9 3v18" />
+      <path d="M15 3v18" />
+    </svg>
+  );
+}
+
+export function ShapesIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.198-.043L16.3 8.9a.7.7 0 0 1-.572 1.1Z" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <circle cx="17.5" cy="17.5" r="3.5" />
     </svg>
   );
 }
@@ -110,3 +496,165 @@ export function GoogleIcon(props: IconProps) {
   );
 }
 
+export function StatProbIcon(props: IconProps) {
+  return (
+    <svg
+      width={28}
+      height={28}
+      viewBox="0 0 512 512"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+      {...props}
+    >
+      <defs>
+        <linearGradient
+          id="statprob-icon-bg"
+          x1="0"
+          y1="0"
+          x2="512"
+          y2="512"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0%" stopColor="#0F172A" />
+          <stop offset="100%" stopColor="#020617" />
+        </linearGradient>
+        <linearGradient
+          id="statprob-icon-bar"
+          x1="0"
+          y1="0"
+          x2="0"
+          y2="1"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0%" stopColor="#9333EA" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="#06B6D4" stopOpacity="0.05" />
+        </linearGradient>
+        <linearGradient
+          id="statprob-icon-curve"
+          x1="80"
+          y1="140"
+          x2="432"
+          y2="400"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0%" stopColor="#9333EA" />
+          <stop offset="50%" stopColor="#06B6D4" />
+          <stop offset="100%" stopColor="#9333EA" />
+        </linearGradient>
+        <filter
+          id="statprob-icon-glow"
+          x="-20%"
+          y="-20%"
+          width="140%"
+          height="140%"
+        >
+          <feGaussianBlur stdDeviation="8" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <rect width="512" height="512" rx="112" fill="url(#statprob-icon-bg)" />
+      <rect
+        width="510"
+        height="510"
+        x="1"
+        y="1"
+        rx="111"
+        stroke="#1E293B"
+        strokeWidth="2"
+      />
+
+      <rect
+        x="116"
+        y="320"
+        width="40"
+        height="96"
+        rx="6"
+        fill="url(#statprob-icon-bar)"
+      />
+      <rect
+        x="176"
+        y="240"
+        width="40"
+        height="176"
+        rx="6"
+        fill="url(#statprob-icon-bar)"
+      />
+      <rect
+        x="236"
+        y="140"
+        width="40"
+        height="276"
+        rx="6"
+        fill="url(#statprob-icon-bar)"
+      />
+      <rect
+        x="296"
+        y="240"
+        width="40"
+        height="176"
+        rx="6"
+        fill="url(#statprob-icon-bar)"
+      />
+      <rect
+        x="356"
+        y="320"
+        width="40"
+        height="96"
+        rx="6"
+        fill="url(#statprob-icon-bar)"
+      />
+
+      <path
+        d="M 256 140 L 256 416"
+        stroke="#06B6D4"
+        strokeWidth="4"
+        strokeDasharray="12 8"
+        opacity="0.6"
+      />
+      <path
+        d="M 196 240 L 196 416"
+        stroke="#9333EA"
+        strokeWidth="4"
+        strokeDasharray="8 8"
+        opacity="0.4"
+      />
+      <path
+        d="M 316 240 L 316 416"
+        stroke="#9333EA"
+        strokeWidth="4"
+        strokeDasharray="8 8"
+        opacity="0.4"
+      />
+
+      <path
+        d="M 80 416 L 432 416"
+        stroke="#334155"
+        strokeWidth="8"
+        strokeLinecap="round"
+      />
+
+      <path
+        d="M 80 400 C 160 400, 190 140, 256 140 C 322 140, 352 400, 432 400"
+        stroke="url(#statprob-icon-curve)"
+        strokeWidth="20"
+        strokeLinecap="round"
+        fill="none"
+        filter="url(#statprob-icon-glow)"
+      />
+
+      <circle
+        cx="256"
+        cy="140"
+        r="14"
+        fill="#0F172A"
+        stroke="#06B6D4"
+        strokeWidth="6"
+      />
+    </svg>
+  );
+}
