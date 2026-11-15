@@ -1,13 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { DatasetCard, useAllDatasets } from "@/entities/dataset";
+import {
+  DatasetCard,
+  deleteDatasetById,
+  useDatasetsLinkedList,
+  type Dataset,
+} from "@/entities/dataset";
 import {
   setDatasetSearchQuery,
   useDatasetSearchQuery,
   useDatasetTrieSearch,
 } from "@/features/search-datasets";
-import { cn } from "@/shared/lib";
+import { cn, DoublyLinkedList } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
@@ -16,7 +21,14 @@ import { FolderChartIcon } from "@/shared/ui/icons";
 type DatasetFilter = "all" | "individual" | "grouped" | "recent";
 
 export function DatasetsGrid() {
-  const allDatasets = useAllDatasets();
+  // 1. Obtenemos la Lista Doblemente Enlazada (DoublyLinkedList<Dataset>) principal
+  const datasetsLinkedList = useDatasetsLinkedList();
+  const allDatasets = useMemo(
+    () => datasetsLinkedList.toArray(),
+    [datasetsLinkedList],
+  );
+
+  // 2. Aplicamos búsqueda por prefijo con el Trie sobre los datasets de la lista
   const searchQuery = useDatasetSearchQuery();
   const trieMatchedDatasets = useDatasetTrieSearch(allDatasets, searchQuery);
   const [activeFilter, setActiveFilter] = useState<DatasetFilter>("all");
@@ -28,22 +40,43 @@ export function DatasetsGrid() {
     { id: "recent", label: "Recientes" },
   ];
 
-  const filteredDatasets = useMemo(() => {
-    if (activeFilter === "individual") {
-      return trieMatchedDatasets.filter(
-        (dataset) => dataset.kind === "individual",
-      );
+  // 3. Recorremos la Lista Doblemente Enlazada nodo por nodo (head -> next -> tail)
+  //    para construir la sublista visible según la pestaña activa
+  const filteredLinkedList = useMemo(() => {
+    const matchedIds = new Set(trieMatchedDatasets.map((d) => d.id));
+    const list = new DoublyLinkedList<Dataset>();
+
+    let currentNode = datasetsLinkedList.head;
+    while (currentNode) {
+      const dataset = currentNode.value;
+      if (matchedIds.has(dataset.id)) {
+        if (activeFilter === "all") {
+          list.append(dataset);
+        } else if (
+          activeFilter === "individual" &&
+          dataset.kind === "individual"
+        ) {
+          list.append(dataset);
+        } else if (activeFilter === "grouped" && dataset.kind === "grouped") {
+          list.append(dataset);
+        } else if (activeFilter === "recent" && list.size < 4) {
+          list.append(dataset);
+        }
+      }
+      currentNode = currentNode.next;
     }
-    if (activeFilter === "grouped") {
-      return trieMatchedDatasets.filter(
-        (dataset) => dataset.kind === "grouped",
-      );
-    }
-    if (activeFilter === "recent") {
-      return trieMatchedDatasets.slice(0, 4);
-    }
-    return trieMatchedDatasets;
-  }, [trieMatchedDatasets, activeFilter]);
+
+    return list;
+  }, [datasetsLinkedList, trieMatchedDatasets, activeFilter]);
+
+  const filteredDatasets = useMemo(
+    () => filteredLinkedList.toArray(),
+    [filteredLinkedList],
+  );
+
+  function handleDeleteDataset(datasetId: string) {
+    deleteDatasetById(datasetId);
+  }
 
   return (
     <Card className="p-5 sm:p-6">
@@ -115,7 +148,11 @@ export function DatasetsGrid() {
       ) : (
         <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredDatasets.map((dataset) => (
-            <DatasetCard key={dataset.id} dataset={dataset} />
+            <DatasetCard
+              key={dataset.id}
+              dataset={dataset}
+              onDelete={handleDeleteDataset}
+            />
           ))}
         </div>
       )}
