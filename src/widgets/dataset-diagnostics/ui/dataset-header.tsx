@@ -41,12 +41,7 @@ export function DatasetHeader({
             Volver a Datasets
           </ButtonLink>
 
-          <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
-            Repositorio privado /{" "}
-            <span className="text-primary">{dataset.repositoryLabel}</span> /
-          </p>
-
-          <div className="mt-2 flex flex-wrap items-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <Badge variant="success">
               Activo · N = {selectedParameter.values.length.toLocaleString("en-US")}{" "}
               registros

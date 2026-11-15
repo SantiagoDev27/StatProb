@@ -87,15 +87,6 @@ export function ProfileMenu() {
                 </p>
               </div>
             </div>
-
-            <Link
-              href={ROUTES.profile}
-              onClick={() => setOpen(false)}
-              aria-label="Configuración de perfil"
-              className="flex size-8 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary/10"
-            >
-              <SettingsIcon className="size-4.5" />
-            </Link>
           </div>
 
           {/* Opciones de cuenta */}

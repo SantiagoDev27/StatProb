@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { MOCK_WORKSPACE } from "@/entities/workspace";
+import { useAllDatasets } from "@/entities/dataset";
 import { ROUTES } from "@/shared/config";
 import {
   ArrowRightIcon,
@@ -9,6 +11,8 @@ import {
 } from "@/shared/ui/icons";
 
 export function DatasetsHero() {
+  const allDatasets = useAllDatasets();
+
   return (
     <section className="relative overflow-hidden rounded-2xl border border-border bg-surface p-6 sm:p-8">
       {/* Glows de fondo */}
@@ -44,7 +48,7 @@ export function DatasetsHero() {
             <span>
               Datasets:{" "}
               <strong className="font-semibold text-foreground">
-                {MOCK_WORKSPACE.datasetsCount} creados
+                {allDatasets.length} creados
               </strong>
             </span>
           </div>
@@ -67,7 +71,7 @@ export function DatasetsHero() {
           </div>
 
           <Link
-            href={ROUTES.datasetNewParameter("muestreo-biometrico")}
+            href={ROUTES.datasetCreate}
             className="flex h-11 w-full items-center justify-between rounded-lg border border-border-strong bg-surface-hover/80 px-4 text-xs font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-surface-hover"
           >
             <span>Crear Dataset Individual</span>
@@ -91,4 +95,3 @@ export function DatasetsHero() {
     </section>
   );
 }
-

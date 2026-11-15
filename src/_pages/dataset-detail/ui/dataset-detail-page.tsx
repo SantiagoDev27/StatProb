@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { findDatasetById, MOCK_DATASETS } from "@/entities/dataset";
 import { DatasetDiagnosticsView } from "@/widgets/dataset-diagnostics";
@@ -16,7 +15,7 @@ export async function generateDatasetDetailMetadata({
   const { id } = await params;
   const dataset = findDatasetById(id);
   return {
-    title: dataset ? dataset.fileName : "Dataset no encontrado",
+    title: dataset ? dataset.fileName : "Panel Estadístico de Dataset",
   };
 }
 
@@ -28,10 +27,6 @@ export async function DatasetDetailPage({
   const { id } = await params;
   const dataset = findDatasetById(id);
 
-  if (!dataset) {
-    notFound();
-  }
-
   return (
     <Suspense
       fallback={
@@ -40,7 +35,7 @@ export async function DatasetDetailPage({
         </div>
       }
     >
-      <DatasetDiagnosticsView dataset={dataset} />
+      <DatasetDiagnosticsView datasetId={id} initialDataset={dataset} />
     </Suspense>
   );
 }

@@ -38,6 +38,7 @@ export {
   SettingsIcon,
   ShapesIcon,
   SlidersIcon,
+  StatProbIcon,
   TableGridIcon,
   TrashIcon,
   TrendChartIcon,

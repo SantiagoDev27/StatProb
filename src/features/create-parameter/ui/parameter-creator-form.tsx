@@ -7,8 +7,10 @@ import {
   getCustomParametersSnapshot,
   mergeDatasetParameters,
   parseCustomParametersSnapshot,
+  saveCustomDataset,
   saveCustomParameter,
   subscribeCustomParameters,
+  useDatasetById,
   type Dataset,
   type DatasetParameter,
   type ParameterType,
@@ -22,6 +24,7 @@ import { Card } from "@/shared/ui/card";
 import {
   BoltIcon,
   BroomIcon,
+  HashIcon,
   RefreshIcon,
   ShapesIcon,
   SlidersIcon,
@@ -86,10 +89,12 @@ function buildInitialPresets(param?: DatasetParameter): {
 }
 
 function ParameterEditorInner({
+  mode,
   dataset,
   editingParameter,
 }: {
-  dataset: Dataset;
+  mode: "create-dataset" | "parameter";
+  dataset?: Dataset;
   editingParameter?: DatasetParameter;
 }) {
   const router = useRouter();
@@ -99,8 +104,12 @@ function ParameterEditorInner({
   const [paramType, setParamType] = useState<ParameterType>(
     editingParameter?.type ?? "quantitative",
   );
+  const [datasetName, setDatasetName] = useState<string>(
+    dataset?.name ?? "Medición_Presión_Experimental_20",
+  );
   const [parameterName, setParameterName] = useState<string>(
-    editingParameter?.name ?? "Medición_Presión_Experimental_20",
+    editingParameter?.name ??
+      (mode === "create-dataset" ? "Parametro_1" : "Nuevo_Parametro_1"),
   );
   const [quantRows, setQuantRows] = useState<QuantitativeRow[]>(() =>
     buildInitialQuantRows(editingParameter),
@@ -120,13 +129,19 @@ function ParameterEditorInner({
     setError(null);
     seqRef.current += 1;
     if (paramType === "quantitative") {
-      setQuantRows([{ id: `q-clear-${seqRef.current}`, label: "Muestra_Ensayo_A1", value: 0 }]);
+      setQuantRows([
+        { id: `q-clear-${seqRef.current}`, label: "Muestra_Ensayo_A1", value: 0 },
+      ]);
     } else {
       const currentPreset =
         presets.find((p) => p.id === activePresetId) ?? presets[0];
       const defaultCategory = currentPreset?.levels[0] ?? "Nivel_1";
       setQualRows([
-        { id: `c-clear-${seqRef.current}`, label: "CASE_#8901", category: defaultCategory },
+        {
+          id: `c-clear-${seqRef.current}`,
+          label: "CASE_#8901",
+          category: defaultCategory,
+        },
       ]);
     }
   }
@@ -136,7 +151,6 @@ function ParameterEditorInner({
     const chosen = presets.find((p) => p.id === presetId);
     if (!chosen || chosen.levels.length === 0) return;
 
-    // Homologa las filas actuales a los niveles del preset elegido
     setQualRows((prev) =>
       prev.map((row, idx) => ({
         ...row,
@@ -170,24 +184,33 @@ function ParameterEditorInner({
 
   function handleSaveAndCalculate() {
     setError(null);
-    const cleanName = parameterName.trim().replace(/\s+/g, "_");
-    if (!cleanName) {
+    const cleanDatasetName = datasetName.trim().replace(/\s+/g, "_");
+    const cleanParamName = parameterName.trim().replace(/\s+/g, "_");
+
+    if (mode === "create-dataset" && !cleanDatasetName) {
+      setError("Ingresa un identificador para el nuevo dataset.");
+      return;
+    }
+    if (!cleanParamName) {
       setError("Ingresa un identificador para el parámetro antes de guardar.");
       return;
     }
 
     seqRef.current += 1;
-    const targetId = editingParameter?.id ?? `custom-${seqRef.current}`;
+    const targetParamId =
+      editingParameter?.id ??
+      `${cleanParamName.toLowerCase()}-${seqRef.current}`;
+
     let savedParam: DatasetParameter;
 
     if (paramType === "quantitative") {
-      if (quantRows.length < 2) {
-        setError("Agrega al menos 2 observaciones en la matriz cuantitativa.");
+      if (quantRows.length < 1) {
+        setError("Agrega al menos 1 observación en la matriz cuantitativa.");
         return;
       }
       savedParam = {
-        id: targetId,
-        name: cleanName,
+        id: targetParamId,
+        name: cleanParamName,
         type: "quantitative",
         scale:
           editingParameter?.type === "quantitative"
@@ -201,16 +224,16 @@ function ParameterEditorInner({
         labels: quantRows.map((r) => r.label.trim() || "Muestra"),
       };
     } else {
-      if (qualRows.length < 2) {
-        setError("Agrega al menos 2 casos en la matriz cualitativa.");
+      if (qualRows.length < 1) {
+        setError("Agrega al menos 1 caso en la matriz cualitativa.");
         return;
       }
       const activePreset =
         presets.find((p) => p.id === activePresetId) ?? presets[0];
 
       savedParam = {
-        id: targetId,
-        name: cleanName,
+        id: targetParamId,
+        name: cleanParamName,
         type: "qualitative",
         scale:
           editingParameter?.type === "qualitative"
@@ -220,6 +243,43 @@ function ParameterEditorInner({
         labels: qualRows.map((r) => r.label.trim() || "CASE"),
         levels: activePreset?.levels,
       };
+    }
+
+    if (mode === "create-dataset" || !dataset) {
+      const slug = cleanDatasetName
+        .toLowerCase()
+        .replace(/[^a-z0-9-_]/g, "-")
+        .replace(/-+/g, "-");
+      const newDatasetId = `${slug || "dataset"}-${seqRef.current}`;
+      const obsCount = savedParam.values.length;
+
+      const newDataset: Dataset = {
+        id: newDatasetId,
+        name: cleanDatasetName,
+        fileName: cleanDatasetName.includes(".")
+          ? cleanDatasetName
+          : `${cleanDatasetName}.csv`,
+        sidebarName:
+          cleanDatasetName.length > 22
+            ? `${cleanDatasetName.slice(0, 22)}...`
+            : cleanDatasetName,
+        repositoryLabel: "Laboratorio_Manual",
+        description:
+          "Dataset creado manualmente por el usuario en el editor interactivo de StatProb.",
+        format: "CSV",
+        createdLabel: "Creado ahora · Manual",
+        kindLabel: "Manual Individual",
+        kind: "individual",
+        sampleSize: obsCount.toLocaleString("en-US"),
+        variablesCount: 1,
+        sizeLabel: `${Math.max(1, Math.round(obsCount * 0.4))} KB`,
+        hasSecondaryAction: true,
+        parameters: [savedParam],
+      };
+
+      saveCustomDataset(newDataset);
+      router.push(ROUTES.main);
+      return;
     }
 
     saveCustomParameter(dataset.id, savedParam);
@@ -233,18 +293,9 @@ function ParameterEditorInner({
       {/* Encabezado fiel al diseño según tipo Cuantitativo o Cualitativo */}
       <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
         <div className="max-w-2xl">
-          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
-            Espacio de trabajo / Laboratorio cuantitativo /{" "}
-            <span className="text-primary">
-              {paramType === "quantitative"
-                ? "Ingreso manual de datos"
-                : "Ingreso manual de datos (cualitativos)"}
-            </span>
-          </p>
-
           {paramType === "quantitative" ? (
             <>
-              <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                 Ingreso Manual &amp; Calibración de Datos
               </h1>
               <div className="mt-2">
@@ -258,7 +309,7 @@ function ParameterEditorInner({
             </>
           ) : (
             <>
-              <h1 className="mt-2 flex items-center gap-3 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              <h1 className="flex items-center gap-3 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                 <span
                   className="h-6 w-1 shrink-0 rounded-full bg-primary"
                   aria-hidden
@@ -309,26 +360,68 @@ function ParameterEditorInner({
 
       {error && <Alert tone="error">{error}</Alert>}
 
-      {/* Barra de control: Identificador de matriz y Naturaleza de variable */}
+      {/* Barra de control: Identificador de matriz/parámetro y Naturaleza de variable */}
       <Card className="flex flex-col gap-5 p-4 sm:p-5 lg:flex-row lg:items-center">
-        <div className="flex flex-1 flex-col gap-1.5 lg:max-w-md">
-          <div className="flex items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-[0.14em]">
-            <label htmlFor="matrix-identifier-input" className="text-muted">
-              Identificador de matriz / dataset
-            </label>
-            <span className="font-semibold text-primary">DS-ALPHA.09</span>
+        {mode === "create-dataset" ? (
+          <>
+            <div className="flex flex-1 flex-col gap-1.5 lg:max-w-xs">
+              <div className="flex items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-[0.14em]">
+                <label htmlFor="dataset-identifier-input" className="text-muted">
+                  Identificador de matriz / dataset
+                </label>
+                <span className="font-semibold text-primary">NUEVO</span>
+              </div>
+              <div className="flex h-10 items-center gap-2.5 rounded-lg border border-border bg-background/80 px-3 focus-within:border-primary">
+                <TableGridIcon className="size-4 shrink-0 text-muted" />
+                <input
+                  id="dataset-identifier-input"
+                  type="text"
+                  value={datasetName}
+                  onChange={(e) => setDatasetName(e.target.value)}
+                  className="w-full bg-transparent font-mono text-xs font-medium text-foreground outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-1 flex-col gap-1.5 lg:max-w-xs">
+              <div className="flex items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-[0.14em]">
+                <label htmlFor="param-identifier-input" className="text-muted">
+                  Nombre del parámetro inicial
+                </label>
+                <span className="font-semibold text-primary">VAR 01</span>
+              </div>
+              <div className="flex h-10 items-center gap-2.5 rounded-lg border border-border bg-background/80 px-3 focus-within:border-primary">
+                <HashIcon className="size-3.5 shrink-0 text-muted" />
+                <input
+                  id="param-identifier-input"
+                  type="text"
+                  value={parameterName}
+                  onChange={(e) => setParameterName(e.target.value)}
+                  className="w-full bg-transparent font-mono text-xs font-medium text-foreground outline-none"
+                />
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-1 flex-col gap-1.5 lg:max-w-md">
+            <div className="flex items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-[0.14em]">
+              <label htmlFor="matrix-identifier-input" className="text-muted">
+                Parámetro en {dataset?.name ?? "Dataset"}
+              </label>
+              <span className="font-semibold text-primary">DS-ALPHA.09</span>
+            </div>
+            <div className="flex h-10 items-center gap-2.5 rounded-lg border border-border bg-background/80 px-3 focus-within:border-primary">
+              <TableGridIcon className="size-4 shrink-0 text-muted" />
+              <input
+                id="matrix-identifier-input"
+                type="text"
+                value={parameterName}
+                onChange={(e) => setParameterName(e.target.value)}
+                className="w-full bg-transparent font-mono text-xs font-medium text-foreground outline-none"
+              />
+            </div>
           </div>
-          <div className="flex h-10 items-center gap-2.5 rounded-lg border border-border bg-background/80 px-3 focus-within:border-primary">
-            <TableGridIcon className="size-4 shrink-0 text-muted" />
-            <input
-              id="matrix-identifier-input"
-              type="text"
-              value={parameterName}
-              onChange={(e) => setParameterName(e.target.value)}
-              className="w-full bg-transparent font-mono text-xs font-medium text-foreground outline-none"
-            />
-          </div>
-        </div>
+        )}
 
         <div className="flex flex-col gap-1.5">
           <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
@@ -397,13 +490,26 @@ function ParameterEditorInner({
   );
 }
 
-export function ParameterCreatorForm({ dataset }: { dataset: Dataset }) {
+export function ParameterCreatorForm({
+  datasetId,
+  initialDataset,
+  mode = "parameter",
+}: {
+  datasetId?: string;
+  initialDataset?: Dataset;
+  mode?: "create-dataset" | "parameter";
+}) {
   const searchParams = useSearchParams();
   const editParamId = searchParams.get("edit");
 
+  const resolvedDataset = useDatasetById(datasetId ?? "", initialDataset);
+
   const customRaw = useSyncExternalStore(
     subscribeCustomParameters,
-    () => getCustomParametersSnapshot(dataset.id),
+    () =>
+      resolvedDataset
+        ? getCustomParametersSnapshot(resolvedDataset.id)
+        : "[]",
     getCustomParametersServerSnapshot,
   );
 
@@ -413,8 +519,11 @@ export function ParameterCreatorForm({ dataset }: { dataset: Dataset }) {
   );
 
   const allParameters = useMemo(
-    () => mergeDatasetParameters(dataset.parameters, customParameters),
-    [dataset.parameters, customParameters],
+    () =>
+      resolvedDataset
+        ? mergeDatasetParameters(resolvedDataset.parameters, customParameters)
+        : [],
+    [resolvedDataset, customParameters],
   );
 
   const editingParameter = useMemo(
@@ -427,8 +536,9 @@ export function ParameterCreatorForm({ dataset }: { dataset: Dataset }) {
 
   return (
     <ParameterEditorInner
-      key={editingParameter?.id ?? "new"}
-      dataset={dataset}
+      key={`${mode}-${resolvedDataset?.id ?? "new"}-${editingParameter?.id ?? "new"}`}
+      mode={mode}
+      dataset={resolvedDataset}
       editingParameter={editingParameter}
     />
   );

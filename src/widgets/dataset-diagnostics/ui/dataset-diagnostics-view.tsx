@@ -8,20 +8,30 @@ import {
   mergeDatasetParameters,
   parseCustomParametersSnapshot,
   subscribeCustomParameters,
+  useDatasetById,
   type Dataset,
 } from "@/entities/dataset";
+import { ROUTES } from "@/shared/config";
+import { ButtonLink } from "@/shared/ui/button";
 import { DatasetHeader } from "./dataset-header";
 import { DatasetParametersTable } from "./dataset-parameters-table";
 import { QualitativeDiagnostics } from "./qualitative-diagnostics";
 import { QuantitativeDiagnostics } from "./quantitative-diagnostics";
 
-export function DatasetDiagnosticsView({ dataset }: { dataset: Dataset }) {
+export function DatasetDiagnosticsView({
+  datasetId,
+  initialDataset,
+}: {
+  datasetId: string;
+  initialDataset?: Dataset;
+}) {
   const searchParams = useSearchParams();
   const queryParamId = searchParams.get("param");
+  const dataset = useDatasetById(datasetId, initialDataset);
 
   const customRaw = useSyncExternalStore(
     subscribeCustomParameters,
-    () => getCustomParametersSnapshot(dataset.id),
+    () => getCustomParametersSnapshot(datasetId),
     getCustomParametersServerSnapshot,
   );
 
@@ -31,8 +41,8 @@ export function DatasetDiagnosticsView({ dataset }: { dataset: Dataset }) {
   );
 
   const allParameters = useMemo(
-    () => mergeDatasetParameters(dataset.parameters, customParameters),
-    [dataset.parameters, customParameters],
+    () => mergeDatasetParameters(dataset?.parameters ?? [], customParameters),
+    [dataset?.parameters, customParameters],
   );
 
   const [manualSelection, setManualSelection] = useState<{
@@ -42,7 +52,7 @@ export function DatasetDiagnosticsView({ dataset }: { dataset: Dataset }) {
   const [recalcTick, setRecalcTick] = useState(0);
 
   const activeSelectionId =
-    manualSelection?.datasetId === dataset.id
+    manualSelection?.datasetId === datasetId
       ? manualSelection.parameterId
       : (queryParamId ?? allParameters[0]?.id ?? "");
 
@@ -52,6 +62,17 @@ export function DatasetDiagnosticsView({ dataset }: { dataset: Dataset }) {
       allParameters[0],
     [allParameters, activeSelectionId],
   );
+
+  if (!dataset) {
+    return (
+      <div className="flex flex-col items-start gap-4 rounded-xl border border-border bg-surface p-6 text-sm text-muted">
+        <p>No se encontró el dataset solicitado en la sesión actual.</p>
+        <ButtonLink href={ROUTES.main} variant="outline" size="sm">
+          Volver a Mis Datasets
+        </ButtonLink>
+      </div>
+    );
+  }
 
   if (!selectedParameter) {
     return (

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { findDatasetById, MOCK_DATASETS } from "@/entities/dataset";
 import { ParameterCreatorForm } from "@/features/create-parameter";
@@ -30,10 +29,6 @@ export async function NewParameterPage({
   const { id } = await params;
   const dataset = findDatasetById(id);
 
-  if (!dataset) {
-    notFound();
-  }
-
   return (
     <Suspense
       fallback={
@@ -42,7 +37,11 @@ export async function NewParameterPage({
         </div>
       }
     >
-      <ParameterCreatorForm dataset={dataset} />
+      <ParameterCreatorForm
+        datasetId={id}
+        initialDataset={dataset}
+        mode="parameter"
+      />
     </Suspense>
   );
 }

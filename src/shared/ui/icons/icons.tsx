@@ -495,3 +495,166 @@ export function GoogleIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function StatProbIcon(props: IconProps) {
+  return (
+    <svg
+      width={28}
+      height={28}
+      viewBox="0 0 512 512"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+      {...props}
+    >
+      <defs>
+        <linearGradient
+          id="statprob-icon-bg"
+          x1="0"
+          y1="0"
+          x2="512"
+          y2="512"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0%" stopColor="#0F172A" />
+          <stop offset="100%" stopColor="#020617" />
+        </linearGradient>
+        <linearGradient
+          id="statprob-icon-bar"
+          x1="0"
+          y1="0"
+          x2="0"
+          y2="1"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0%" stopColor="#9333EA" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="#06B6D4" stopOpacity="0.05" />
+        </linearGradient>
+        <linearGradient
+          id="statprob-icon-curve"
+          x1="80"
+          y1="140"
+          x2="432"
+          y2="400"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0%" stopColor="#9333EA" />
+          <stop offset="50%" stopColor="#06B6D4" />
+          <stop offset="100%" stopColor="#9333EA" />
+        </linearGradient>
+        <filter
+          id="statprob-icon-glow"
+          x="-20%"
+          y="-20%"
+          width="140%"
+          height="140%"
+        >
+          <feGaussianBlur stdDeviation="8" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <rect width="512" height="512" rx="112" fill="url(#statprob-icon-bg)" />
+      <rect
+        width="510"
+        height="510"
+        x="1"
+        y="1"
+        rx="111"
+        stroke="#1E293B"
+        strokeWidth="2"
+      />
+
+      <rect
+        x="116"
+        y="320"
+        width="40"
+        height="96"
+        rx="6"
+        fill="url(#statprob-icon-bar)"
+      />
+      <rect
+        x="176"
+        y="240"
+        width="40"
+        height="176"
+        rx="6"
+        fill="url(#statprob-icon-bar)"
+      />
+      <rect
+        x="236"
+        y="140"
+        width="40"
+        height="276"
+        rx="6"
+        fill="url(#statprob-icon-bar)"
+      />
+      <rect
+        x="296"
+        y="240"
+        width="40"
+        height="176"
+        rx="6"
+        fill="url(#statprob-icon-bar)"
+      />
+      <rect
+        x="356"
+        y="320"
+        width="40"
+        height="96"
+        rx="6"
+        fill="url(#statprob-icon-bar)"
+      />
+
+      <path
+        d="M 256 140 L 256 416"
+        stroke="#06B6D4"
+        strokeWidth="4"
+        strokeDasharray="12 8"
+        opacity="0.6"
+      />
+      <path
+        d="M 196 240 L 196 416"
+        stroke="#9333EA"
+        strokeWidth="4"
+        strokeDasharray="8 8"
+        opacity="0.4"
+      />
+      <path
+        d="M 316 240 L 316 416"
+        stroke="#9333EA"
+        strokeWidth="4"
+        strokeDasharray="8 8"
+        opacity="0.4"
+      />
+
+      <path
+        d="M 80 416 L 432 416"
+        stroke="#334155"
+        strokeWidth="8"
+        strokeLinecap="round"
+      />
+
+      <path
+        d="M 80 400 C 160 400, 190 140, 256 140 C 322 140, 352 400, 432 400"
+        stroke="url(#statprob-icon-curve)"
+        strokeWidth="20"
+        strokeLinecap="round"
+        fill="none"
+        filter="url(#statprob-icon-glow)"
+      />
+
+      <circle
+        cx="256"
+        cy="140"
+        r="14"
+        fill="#0F172A"
+        stroke="#06B6D4"
+        strokeWidth="6"
+      />
+    </svg>
+  );
+}
