@@ -6,6 +6,7 @@ import { Card } from "@/shared/ui/card";
 import {
   ArrowLeftIcon,
   DownloadIcon,
+  FileEditIcon,
   PlusIcon,
   RefreshIcon,
 } from "@/shared/ui/icons";
@@ -53,15 +54,6 @@ export function DatasetHeader({
             <Badge variant="neutral">
               {dataset.format} · {dataset.sizeLabel}
             </Badge>
-            <Badge
-              variant={
-                selectedParameter.type === "quantitative" ? "primary" : "accent"
-              }
-            >
-              {selectedParameter.type === "quantitative"
-                ? `Cuantitativa · ${selectedParameter.scale}`
-                : `Cualitativa · ${selectedParameter.scale}`}
-            </Badge>
           </div>
 
           <h1 className="mt-3 truncate text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
@@ -81,13 +73,13 @@ export function DatasetHeader({
         </div>
 
         {/* Derecha: selector único de parámetro y acciones */}
-        <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-[340px]">
+        <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-[360px]">
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="parameter-select"
               className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted"
             >
-              Variable analizada (1 a la vez)
+              Variable analizada
             </label>
             <select
               id="parameter-select"
@@ -117,6 +109,16 @@ export function DatasetHeader({
               <RefreshIcon className="size-3.5 text-primary" />
               Recalcular
             </Button>
+
+            <ButtonLink
+              href={`${ROUTES.datasetNewParameter(dataset.id)}?edit=${encodeURIComponent(selectedParameter.id)}`}
+              variant="outline"
+              size="sm"
+              className="h-9 text-xs"
+            >
+              <FileEditIcon className="size-3.5 text-primary" />
+              Editar / Ver Datos
+            </ButtonLink>
 
             <Button variant="primary" size="sm" className="h-9 text-xs font-semibold">
               <DownloadIcon className="size-3.5" />

@@ -5,6 +5,7 @@ import { useMemo, useState, useSyncExternalStore } from "react";
 import {
   getCustomParametersServerSnapshot,
   getCustomParametersSnapshot,
+  mergeDatasetParameters,
   parseCustomParametersSnapshot,
   subscribeCustomParameters,
   type Dataset,
@@ -30,7 +31,7 @@ export function DatasetDiagnosticsView({ dataset }: { dataset: Dataset }) {
   );
 
   const allParameters = useMemo(
-    () => [...dataset.parameters, ...customParameters],
+    () => mergeDatasetParameters(dataset.parameters, customParameters),
     [dataset.parameters, customParameters],
   );
 

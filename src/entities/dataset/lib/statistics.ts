@@ -1,7 +1,7 @@
 import { MinMaxHeapPair } from "@/shared/lib";
 import type { QualitativeParameter, QuantitativeParameter } from "../model/types";
 
-export const HISTOGRAM_INTERVAL_PRESETS = [10, 18, 26] as const;
+export const HISTOGRAM_INTERVAL_PRESETS = [10, 20, 30] as const;
 
 export type HistogramIntervalPreset = (typeof HISTOGRAM_INTERVAL_PRESETS)[number];
 

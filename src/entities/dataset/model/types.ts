@@ -15,6 +15,8 @@ export type QuantitativeParameter = {
   scale: QuantitativeScale;
   unit?: string;
   values: number[];
+  /** Identificadores opcionales por fila (ej. "Muestra_Ensayo_A1"). */
+  labels?: string[];
 };
 
 export type QualitativeParameter = {
@@ -23,6 +25,10 @@ export type QualitativeParameter = {
   type: "qualitative";
   scale: QualitativeScale;
   values: string[];
+  /** Identificadores opcionales por caso (ej. "CASE_#8901"). */
+  labels?: string[];
+  /** Niveles / factores ordenados del preset utilizado. */
+  levels?: string[];
 };
 
 export type DatasetParameter = QuantitativeParameter | QualitativeParameter;

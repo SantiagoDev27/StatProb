@@ -417,6 +417,55 @@ export function PieChartIcon(props: IconProps) {
   );
 }
 
+export function BoltIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+    </svg>
+  );
+}
+
+export function BroomIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="m13 11 9-9" />
+      <path d="M14.6 12.6c.8.8.9 2.1.2 3L10 22l-8-8 6.4-4.8c.9-.7 2.2-.6 3 .2Z" />
+      <path d="m6.8 10.5 6.7 6.7" />
+    </svg>
+  );
+}
+
+export function TableGridIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M3 9h18" />
+      <path d="M3 15h18" />
+      <path d="M9 3v18" />
+    </svg>
+  );
+}
+
+export function ColumnsIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M9 3v18" />
+      <path d="M15 3v18" />
+    </svg>
+  );
+}
+
+export function ShapesIcon(props: IconProps) {
+  return (
+    <svg {...strokeIcon} {...props}>
+      <path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.198-.043L16.3 8.9a.7.7 0 0 1-.572 1.1Z" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <circle cx="17.5" cy="17.5" r="3.5" />
+    </svg>
+  );
+}
+
 export function GoogleIcon(props: IconProps) {
   return (
     <svg

@@ -43,12 +43,43 @@ export function loadCustomParameters(datasetId: string): DatasetParameter[] {
   return parseCustomParametersSnapshot(getCustomParametersSnapshot(datasetId));
 }
 
+/**
+ * Combina los parámetros base del dataset con los creados o editados por el usuario.
+ * Si un parámetro guardado comparte `id` con uno existente, lo reemplaza con los datos editados.
+ */
+export function mergeDatasetParameters(
+  baseParameters: DatasetParameter[],
+  storedParameters: DatasetParameter[],
+): DatasetParameter[] {
+  const byId = new Map<string, DatasetParameter>();
+  for (const param of storedParameters) {
+    byId.set(param.id, param);
+  }
+
+  const merged = baseParameters.map((base) => byId.get(base.id) ?? base);
+  const baseIds = new Set(baseParameters.map((b) => b.id));
+
+  for (const param of storedParameters) {
+    if (!baseIds.has(param.id)) {
+      merged.push(param);
+    }
+  }
+
+  return merged;
+}
+
+/** Guarda un parámetro nuevo o actualiza uno existente con el mismo `id`. */
 export function saveCustomParameter(
   datasetId: string,
   parameter: DatasetParameter,
 ): DatasetParameter[] {
   const existing = loadCustomParameters(datasetId);
-  const next = [...existing, parameter];
+  const index = existing.findIndex((p) => p.id === parameter.id);
+  const next =
+    index >= 0
+      ? existing.map((item, idx) => (idx === index ? parameter : item))
+      : [...existing, parameter];
+
   if (typeof window !== "undefined") {
     try {
       window.sessionStorage.setItem(

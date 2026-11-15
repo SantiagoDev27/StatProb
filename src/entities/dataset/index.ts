@@ -29,6 +29,7 @@ export {
   getCustomParametersServerSnapshot,
   getCustomParametersSnapshot,
   loadCustomParameters,
+  mergeDatasetParameters,
   parseCustomParametersSnapshot,
   saveCustomParameter,
   subscribeCustomParameters,

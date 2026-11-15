@@ -37,7 +37,7 @@ export function QuantitativeHistogram({
   parameter,
   stats,
 }: QuantitativeHistogramProps) {
-  const [intervalCount, setIntervalCount] = useState<HistogramIntervalPreset>(18);
+  const [intervalCount, setIntervalCount] = useState<HistogramIntervalPreset>(20);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   const bins = useMemo(

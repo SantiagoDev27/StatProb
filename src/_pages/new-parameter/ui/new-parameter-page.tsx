@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { findDatasetById, MOCK_DATASETS } from "@/entities/dataset";
 import { ParameterCreatorForm } from "@/features/create-parameter";
 
@@ -15,7 +16,9 @@ export async function generateNewParameterMetadata({
   const { id } = await params;
   const dataset = findDatasetById(id);
   return {
-    title: dataset ? `Nuevo parámetro · ${dataset.fileName}` : "Nuevo parámetro",
+    title: dataset
+      ? `Ingreso Manual · ${dataset.fileName}`
+      : "Ingreso Manual de Datos",
   };
 }
 
@@ -31,6 +34,15 @@ export async function NewParameterPage({
     notFound();
   }
 
-  return <ParameterCreatorForm dataset={dataset} />;
+  return (
+    <Suspense
+      fallback={
+        <div className="rounded-2xl border border-border bg-surface p-8 text-sm text-muted">
+          Cargando editor de parámetros...
+        </div>
+      }
+    >
+      <ParameterCreatorForm dataset={dataset} />
+    </Suspense>
+  );
 }
-
