@@ -26,18 +26,24 @@ export {
   type QuantitativeStats,
 } from "./lib/statistics";
 export {
+  buildDatasetsLinkedList,
+  deleteDatasetById,
   getCustomDatasetsSnapshot,
   getCustomParametersServerSnapshot,
   getCustomParametersSnapshot,
+  getDeletedDatasetIdsSnapshot,
   loadCustomDatasets,
   loadCustomParameters,
+  loadDeletedDatasetIds,
   mergeDatasetParameters,
   parseCustomDatasetsSnapshot,
   parseCustomParametersSnapshot,
+  parseDeletedDatasetIdsSnapshot,
   saveCustomDataset,
   saveCustomParameter,
   subscribeCustomParameters,
   useAllDatasets,
   useDatasetById,
+  useDatasetsLinkedList,
 } from "./lib/custom-parameters-storage";
 export { DatasetCard } from "./ui/dataset-card";

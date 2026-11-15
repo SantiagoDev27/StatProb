@@ -7,10 +7,15 @@ export {
   MinMaxHeapPair,
 } from "./data-structures/binary-heap";
 export {
+  DoublyLinkedList,
+  DoublyLinkedNode,
+} from "./data-structures/doubly-linked-list";
+export {
   normalizeTrieText,
   tokenizeForTrie,
   Trie,
   TrieNode,
 } from "./data-structures/trie";
+
 
 

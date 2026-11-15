@@ -8,6 +8,7 @@ import {
   FileEditIcon,
   ListIcon,
   SlidersIcon,
+  TrashIcon,
   TrendChartIcon,
 } from "@/shared/ui/icons";
 import type { Dataset, DatasetKind } from "../model/types";
@@ -24,7 +25,13 @@ function DatasetKindIcon({ kind }: { kind: DatasetKind }) {
   return <ListIcon className="size-4.5" />;
 }
 
-export function DatasetCard({ dataset }: { dataset: Dataset }) {
+export function DatasetCard({
+  dataset,
+  onDelete,
+}: {
+  dataset: Dataset;
+  onDelete?: (datasetId: string) => void;
+}) {
   return (
     <article className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4 transition-colors hover:border-border-strong">
       <div className="flex items-start justify-between gap-3">
@@ -92,25 +99,19 @@ export function DatasetCard({ dataset }: { dataset: Dataset }) {
           Ver Análisis &amp; Gráficos
         </ButtonLink>
 
-        {dataset.hasSecondaryAction && (
+
+        {onDelete && (
           <Button
             variant="outline"
             size="sm"
-            aria-label={`Configurar ${dataset.name}`}
-            className="size-9 shrink-0 px-0 text-muted hover:text-foreground"
+            onClick={() => onDelete(dataset.id)}
+            aria-label={`Borrar ${dataset.name}`}
+            title={`Borrar ${dataset.name}`}
+            className="size-9 shrink-0 px-0 text-muted hover:border-danger/50 hover:bg-danger/10 hover:text-danger"
           >
-            <SlidersIcon className="size-3.5" />
+            <TrashIcon className="size-3.5" />
           </Button>
         )}
-
-        <Button
-          variant="outline"
-          size="sm"
-          aria-label={`Descargar ${dataset.name}`}
-          className="size-9 shrink-0 px-0 text-muted hover:text-foreground"
-        >
-          <DownloadIcon className="size-3.5" />
-        </Button>
       </div>
     </article>
   );
