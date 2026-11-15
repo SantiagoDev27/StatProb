@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 import { useAllDatasets } from "@/entities/dataset";
 import { MOCK_WORKSPACE } from "@/entities/workspace";
 import { ProfileMenu } from "@/features/profile-menu";
+import { DatasetSearchBar } from "@/features/search-datasets";
 import { ROUTES } from "@/shared/config";
 import { Button } from "@/shared/ui/button";
-import { DownloadIcon, SearchIcon } from "@/shared/ui/icons";
+import { DownloadIcon } from "@/shared/ui/icons";
 
 type BreadcrumbItem = {
   label: string;
@@ -108,15 +109,7 @@ export function WorkspaceTopbar() {
           ))}
         </nav>
 
-        <div className="hidden h-9 w-56 shrink-0 items-center gap-2 rounded-lg border border-border bg-surface px-3 xl:flex">
-          <SearchIcon className="size-3.5 shrink-0 text-muted" />
-          <input
-            type="search"
-            placeholder="Buscar datasets"
-            aria-label="Buscar datasets"
-            className="w-full bg-transparent text-xs text-foreground outline-none placeholder:text-muted/70"
-          />
-        </div>
+        <DatasetSearchBar />
       </div>
 
       {/* Derecha: exportar y menú funcional de perfil */}

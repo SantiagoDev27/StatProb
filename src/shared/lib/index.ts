@@ -6,4 +6,11 @@ export {
   MinHeap,
   MinMaxHeapPair,
 } from "./data-structures/binary-heap";
+export {
+  normalizeTrieText,
+  tokenizeForTrie,
+  Trie,
+  TrieNode,
+} from "./data-structures/trie";
+
 
