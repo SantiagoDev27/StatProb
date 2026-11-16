@@ -120,7 +120,6 @@ export class UndoRedoHistory<T> {
   readonly redoStack: Stack<T>;
   private readonly maxCapacity: number;
 
-  constructor(maxCapacity = 100, undoStack?: Stack<T>, redoStack?: Stack<T>) {
   constructor(
     maxCapacity = 100,
     undoStack?: Stack<T>,
