@@ -202,6 +202,18 @@ export const MOCK_DATASETS: Dataset[] = [
         unit: "pts",
         values: generateNormalSample(1010, 480, 8, 1.4, 0, [2, 3]),
       },
+      {
+        id: "nivel-actividad-fisica",
+        name: "Nivel_Actividad_Fisica",
+        type: "qualitative",
+        scale: "Ordinal",
+        values: generateCategoricalSample(1011, 480, [
+          ["Moderado", 44],
+          ["Activo", 31],
+          ["Sedentario", 17],
+          ["Alto Rendimiento", 8],
+        ]),
+      },
     ],
   },
   {
@@ -217,7 +229,7 @@ export const MOCK_DATASETS: Dataset[] = [
     kindLabel: "Manual Individual",
     kind: "individual",
     sampleSize: "620",
-    variablesCount: 3,
+    variablesCount: 5,
     sizeLabel: "94.2 MB",
     parameters: [
       {
@@ -248,6 +260,25 @@ export const MOCK_DATASETS: Dataset[] = [
           ["Bajista", 10],
         ]),
       },
+      {
+        id: "region-nodo",
+        name: "Region_Nodo",
+        type: "qualitative",
+        scale: "Nominal",
+        values: generateCategoricalSample(1314, 620, [
+          ["US-East-1", 52],
+          ["EU-West-1", 28],
+          ["SA-East-1", 20],
+        ]),
+      },
+      {
+        id: "puntuacion-nps",
+        name: "Puntuacion_NPS",
+        type: "quantitative",
+        scale: "Int32",
+        unit: "pts",
+        values: generateNormalSample(1315, 620, 7.8, 1.5, 0, [2, 3]),
+      },
     ],
   },
   {
@@ -263,7 +294,7 @@ export const MOCK_DATASETS: Dataset[] = [
     kindLabel: "Manual Individual",
     kind: "individual",
     sampleSize: "350",
-    variablesCount: 2,
+    variablesCount: 4,
     sizeLabel: "3.6 MB",
     parameters: [
       {
@@ -285,6 +316,22 @@ export const MOCK_DATASETS: Dataset[] = [
           ["SA-East-1", 22],
         ]),
       },
+      {
+        id: "tiempo-respuesta-seg",
+        name: "Tiempo_Respuesta_seg",
+        type: "quantitative",
+        scale: "Float64",
+        unit: "s",
+        values: generateNormalSample(1516, 350, 16.2, 4.1, 1, [31.5, 33.0]),
+      },
+      {
+        id: "presion-sistolica-mmhg",
+        name: "Presion_Sistolica_mmHg",
+        type: "quantitative",
+        scale: "Int32",
+        unit: "mmHg",
+        values: generateNormalSample(1517, 350, 121, 13, 0, [164, 169]),
+      },
     ],
   },
   {
@@ -300,7 +347,7 @@ export const MOCK_DATASETS: Dataset[] = [
     kindLabel: "Manual Agrupado",
     kind: "grouped",
     sampleSize: "520",
-    variablesCount: 2,
+    variablesCount: 4,
     sizeLabel: "14.1 MB",
     hasSecondaryAction: true,
     parameters: [
@@ -324,6 +371,27 @@ export const MOCK_DATASETS: Dataset[] = [
           ["Estudio", 6],
         ]),
       },
+      {
+        id: "volatilidad-implicita",
+        name: "Volatilidad_Implicita",
+        type: "quantitative",
+        scale: "Float64",
+        unit: "pts",
+        values: generateNormalSample(1718, 520, 19.8, 4.2, 2, [35.4, 37.1]),
+      },
+      {
+        id: "nivel-satisfaccion",
+        name: "Nivel_Satisfaccion",
+        type: "qualitative",
+        scale: "Ordinal",
+        values: generateCategoricalSample(1719, 520, [
+          ["Muy Satisfecho", 34],
+          ["Satisfecho", 35],
+          ["Neutral", 18],
+          ["Insatisfecho", 8],
+          ["Muy Insatisfecho", 5],
+        ]),
+      },
     ],
   },
   {
@@ -339,7 +407,7 @@ export const MOCK_DATASETS: Dataset[] = [
     kindLabel: "Manual Individual",
     kind: "individual",
     sampleSize: "200",
-    variablesCount: 2,
+    variablesCount: 4,
     sizeLabel: "48 KB",
     hasSecondaryAction: true,
     parameters: [
@@ -361,6 +429,22 @@ export const MOCK_DATASETS: Dataset[] = [
           ["Media", 33],
           ["Baja", 15],
         ]),
+      },
+      {
+        id: "masa-corporal-kg",
+        name: "Masa_Corporal_kg",
+        type: "quantitative",
+        scale: "Float64",
+        unit: "kg",
+        values: generateNormalSample(1920, 200, 67.9, 9.4, 1, [44.0, 99.5]),
+      },
+      {
+        id: "presion-sistolica-mmhg",
+        name: "Presion_Sistolica_mmHg",
+        type: "quantitative",
+        scale: "Int32",
+        unit: "mmHg",
+        values: generateNormalSample(1921, 200, 124, 13, 0, [165, 170]),
       },
     ],
   },
