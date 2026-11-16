@@ -292,7 +292,7 @@ export function QualitativeMatrixEditor({
               <div className="flex items-center gap-2.5">
                 <TableGridIcon className="size-4.5 text-primary" />
                 <h2 className="text-base font-semibold text-foreground">
-                  Matriz de Observaciones Cualitativas
+                  Datos de Observaciones Cualitativas
                 </h2>
               </div>
               <span className="font-mono text-xs text-muted">
@@ -323,7 +323,7 @@ export function QualitativeMatrixEditor({
                       stats.mode !== "—" && row.category === stats.mode;
                     const dotColor =
                       LEVEL_COLORS[
-                        (levelIdx >= 0 ? levelIdx : idx) % LEVEL_COLORS.length
+                      (levelIdx >= 0 ? levelIdx : idx) % LEVEL_COLORS.length
                       ];
 
                     return (

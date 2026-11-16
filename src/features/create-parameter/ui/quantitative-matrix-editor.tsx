@@ -112,7 +112,7 @@ export function QuantitativeMatrixEditor({
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-base font-semibold text-foreground">
-              Registro Vectorial Simple
+              Registro  De Datos
             </h2>
             <Badge variant="primary">
               N = {rows.length.toLocaleString("en-US")} Observaciones
@@ -120,9 +120,6 @@ export function QuantitativeMatrixEditor({
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-2 border-b border-border/70 pb-4">
-            <Button variant="outline" size="sm" className="h-8 text-xs">
-              <ColumnsIcon className="size-3.5 text-muted" />+ Añadir Columna
-            </Button>
             <Button
               variant="primary"
               size="sm"
