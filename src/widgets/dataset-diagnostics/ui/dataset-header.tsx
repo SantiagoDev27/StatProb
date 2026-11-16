@@ -115,11 +115,6 @@ export function DatasetHeader({
               Editar / Ver Datos
             </ButtonLink>
 
-            <Button variant="primary" size="sm" className="h-9 text-xs font-semibold">
-              <DownloadIcon className="size-3.5" />
-              Exportar Informe
-            </Button>
-
             <ButtonLink
               href={ROUTES.datasetNewParameter(dataset.id)}
               variant="outline"

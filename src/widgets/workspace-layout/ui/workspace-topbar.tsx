@@ -30,6 +30,15 @@ export function WorkspaceTopbar() {
       { label: "Gestión de Datasets", href: ROUTES.main },
       { label: "Personalizar Perfil", href: ROUTES.profile, current: true },
     );
+  } else if (pathname === ROUTES.graphs) {
+    breadcrumbs.push(
+      { label: "Gestión de Datasets", href: ROUTES.main },
+      {
+        label: "Mapa de Relaciones (Grafos)",
+        href: ROUTES.graphs,
+        current: true,
+      },
+    );
   } else if (pathname === ROUTES.datasetCreate) {
     breadcrumbs.push(
       { label: "Gestión de Datasets", href: ROUTES.main },
@@ -114,11 +123,6 @@ export function WorkspaceTopbar() {
 
       {/* Derecha: exportar y menú funcional de perfil */}
       <div className="flex shrink-0 items-center gap-3">
-        <Button variant="outline" size="sm" className="hidden text-xs sm:inline-flex">
-          <DownloadIcon className="size-3.5" />
-          Exportar Todo
-        </Button>
-
         <ProfileMenu />
       </div>
     </header>

@@ -11,7 +11,6 @@ import { Badge } from "@/shared/ui/badge";
 import {
   ChevronDownIcon,
   ChevronRightIcon,
-  ChevronsUpDownIcon,
   FileTableIcon,
   FolderIcon,
   NetworkIcon,
@@ -23,6 +22,10 @@ export function WorkspaceSidebar() {
   const allDatasets = useAllDatasets();
   const [isDatasetsOpen, setIsDatasetsOpen] = useState(true);
   const recentSidebarDatasets = allDatasets.slice(0, 4);
+
+  const isGraphsActive =
+    pathname === ROUTES.graphs || pathname.startsWith(`${ROUTES.graphs}/`);
+  const isDatasetsSectionActive = !isGraphsActive && pathname !== ROUTES.profile;
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col overflow-y-auto border-r border-border bg-[#06090f] lg:flex">
@@ -49,7 +52,12 @@ export function WorkspaceSidebar() {
           onClick={() => setIsDatasetsOpen((prev) => !prev)}
           aria-expanded={isDatasetsOpen}
           aria-controls="sidebar-recent-datasets"
-          className="flex w-full items-center justify-between rounded-lg bg-primary px-2.5 py-2 text-xs font-semibold text-primary-foreground shadow-[0_0_20px_-8px_var(--color-primary)] transition-opacity hover:opacity-95"
+          className={cn(
+            "flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-xs transition-colors",
+            isDatasetsSectionActive
+              ? "bg-primary font-semibold text-primary-foreground shadow-[0_0_20px_-8px_var(--color-primary)] hover:opacity-95"
+              : "font-medium text-muted hover:bg-surface hover:text-foreground",
+          )}
         >
           <span className="flex items-center gap-2">
             {isDatasetsOpen ? (
@@ -60,7 +68,14 @@ export function WorkspaceSidebar() {
             <FolderIcon className="size-4" />
             <span>Mis Datasets</span>
           </span>
-          <span className="rounded bg-primary-foreground/15 px-1.5 py-0.5 font-mono text-[10px] font-bold">
+          <span
+            className={cn(
+              "rounded px-1.5 py-0.5 font-mono text-[10px]",
+              isDatasetsSectionActive
+                ? "bg-primary-foreground/15 font-bold"
+                : "border border-border bg-surface text-muted",
+            )}
+          >
             {allDatasets.length}
           </span>
         </button>
@@ -102,20 +117,36 @@ export function WorkspaceSidebar() {
           </ul>
         )}
 
-        {/* Carpeta colapsada: Grafos */}
-        <button
-          type="button"
-          className="mt-2 flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-xs font-medium text-muted transition-colors hover:bg-surface hover:text-foreground"
+        {/* Sección: Grafos */}
+        <Link
+          href={ROUTES.graphs}
+          className={cn(
+            "mt-2 flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-xs transition-colors",
+            isGraphsActive
+              ? "bg-primary font-semibold text-primary-foreground shadow-[0_0_20px_-8px_var(--color-primary)] hover:opacity-95"
+              : "font-medium text-muted hover:bg-surface hover:text-foreground",
+          )}
         >
           <span className="flex items-center gap-2">
-            <ChevronRightIcon className="size-3.5" />
+            {isGraphsActive ? (
+              <ChevronDownIcon className="size-3.5" />
+            ) : (
+              <ChevronRightIcon className="size-3.5" />
+            )}
             <NetworkIcon className="size-4" />
             <span>Grafos</span>
           </span>
-          <span className="rounded border border-border bg-surface px-1.5 py-0.5 font-mono text-[10px] text-muted">
-            {MOCK_WORKSPACE.graphsCount}
+          <span
+            className={cn(
+              "rounded px-1.5 py-0.5 font-mono text-[10px]",
+              isGraphsActive
+                ? "bg-primary-foreground/15 font-bold"
+                : "border border-border bg-surface text-muted",
+            )}
+          >
+            {allDatasets.length}
           </span>
-        </button>
+        </Link>
       </nav>
 
       {/* Indicador de almacenamiento */}

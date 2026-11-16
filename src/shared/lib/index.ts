@@ -10,6 +10,7 @@ export {
   DoublyLinkedList,
   DoublyLinkedNode,
 } from "./data-structures/doubly-linked-list";
+export { Graph } from "./data-structures/graph";
 export { Stack, UndoRedoHistory } from "./data-structures/stack";
 export {
   normalizeTrieText,
