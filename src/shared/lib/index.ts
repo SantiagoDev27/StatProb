@@ -10,12 +10,14 @@ export {
   DoublyLinkedList,
   DoublyLinkedNode,
 } from "./data-structures/doubly-linked-list";
+export { Stack, UndoRedoHistory } from "./data-structures/stack";
 export {
   normalizeTrieText,
   tokenizeForTrie,
   Trie,
   TrieNode,
 } from "./data-structures/trie";
+
 
 
 

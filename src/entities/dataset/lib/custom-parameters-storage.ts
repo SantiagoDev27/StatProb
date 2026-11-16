@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useSyncExternalStore } from "react";
-import { DoublyLinkedList } from "@/shared/lib";
+import { DoublyLinkedList, Stack } from "@/shared/lib";
 import { MOCK_DATASETS } from "../model/mock-datasets";
 import type { Dataset, DatasetParameter } from "../model/types";
 
@@ -9,6 +9,137 @@ const STORAGE_PREFIX = "statprob:custom-params:";
 const DATASETS_STORAGE_KEY = "statprob:custom-datasets";
 const DELETED_DATASETS_STORAGE_KEY = "statprob:deleted-dataset-ids";
 const CHANGE_EVENT = "statprob:custom-params-changed";
+
+/**
+ * Instantánea del estado de los datasets almacenados para la Pila de Deshacer / Rehacer
+ * (`datasetsUndoStack` / `datasetsRedoStack`).
+ */
+type DatasetsStorageSnapshot = {
+  customDatasets: Dataset[];
+  deletedIds: string[];
+  paramsByDatasetId: Record<string, DatasetParameter[]>;
+};
+
+const datasetsUndoStack = new Stack<DatasetsStorageSnapshot>(50);
+const datasetsRedoStack = new Stack<DatasetsStorageSnapshot>(50);
+
+function captureDatasetsStorageSnapshot(): DatasetsStorageSnapshot {
+  const customDatasets = loadCustomDatasets();
+  const deletedIds = loadDeletedDatasetIds();
+  const paramsByDatasetId: Record<string, DatasetParameter[]> = {};
+
+  if (typeof window !== "undefined") {
+    const allIds = new Set<string>([
+      ...MOCK_DATASETS.map((d) => d.id),
+      ...customDatasets.map((d) => d.id),
+      ...deletedIds,
+    ]);
+    for (const id of allIds) {
+      paramsByDatasetId[id] = loadCustomParameters(id);
+    }
+  }
+
+  return {
+    customDatasets,
+    deletedIds,
+    paramsByDatasetId,
+  };
+}
+
+function applyDatasetsStorageSnapshot(snapshot: DatasetsStorageSnapshot): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(
+      DATASETS_STORAGE_KEY,
+      JSON.stringify(snapshot.customDatasets),
+    );
+    window.sessionStorage.setItem(
+      DELETED_DATASETS_STORAGE_KEY,
+      JSON.stringify(snapshot.deletedIds),
+    );
+    for (const [datasetId, params] of Object.entries(
+      snapshot.paramsByDatasetId,
+    )) {
+      if (params.length > 0) {
+        window.sessionStorage.setItem(
+          getCustomParametersKey(datasetId),
+          JSON.stringify(params),
+        );
+      } else {
+        window.sessionStorage.removeItem(getCustomParametersKey(datasetId));
+      }
+    }
+    window.dispatchEvent(new Event(CHANGE_EVENT));
+  } catch {
+    // Ignorar si sessionStorage no está disponible
+  }
+}
+
+function pushCurrentStateToUndoStack(): void {
+  if (typeof window === "undefined") return;
+  datasetsUndoStack.push(captureDatasetsStorageSnapshot());
+  datasetsRedoStack.clear();
+}
+
+/**
+ * Deshace la última eliminación o modificación de datasets (`Ctrl + Z`)
+ * desapilando el estado anterior desde `datasetsUndoStack.pop()`.
+ */
+export function undoDatasetsChange(): boolean {
+  if (datasetsUndoStack.isEmpty) return false;
+  const current = captureDatasetsStorageSnapshot();
+  const previous = datasetsUndoStack.pop();
+  if (!previous) return false;
+
+  datasetsRedoStack.push(current);
+  applyDatasetsStorageSnapshot(previous);
+  return true;
+}
+
+/**
+ * Rehace el último cambio deshecho sobre los datasets (`Ctrl + Y`)
+ * desapilando desde `datasetsRedoStack.pop()`.
+ */
+export function redoDatasetsChange(): boolean {
+  if (datasetsRedoStack.isEmpty) return false;
+  const current = captureDatasetsStorageSnapshot();
+  const next = datasetsRedoStack.pop();
+  if (!next) return false;
+
+  datasetsUndoStack.push(current);
+  applyDatasetsStorageSnapshot(next);
+  return true;
+}
+
+export function getDatasetsUndoRedoCounts(): string {
+  return `${datasetsUndoStack.size}:${datasetsRedoStack.size}`;
+}
+
+export function getDatasetsUndoRedoServerCounts(): string {
+  return "0:0";
+}
+
+export function useDatasetsUndoRedo(): {
+  canUndo: boolean;
+  canRedo: boolean;
+  undoCount: number;
+  redoCount: number;
+} {
+  const rawCounts = useSyncExternalStore(
+    subscribeCustomParameters,
+    getDatasetsUndoRedoCounts,
+    getDatasetsUndoRedoServerCounts,
+  );
+  const [undoStr, redoStr] = rawCounts.split(":");
+  const undoCount = Number(undoStr) || 0;
+  const redoCount = Number(redoStr) || 0;
+  return {
+    canUndo: undoCount > 0,
+    canRedo: redoCount > 0,
+    undoCount,
+    redoCount,
+  };
+}
 
 export function getCustomParametersKey(datasetId: string): string {
   return `${STORAGE_PREFIX}${datasetId}`;
@@ -153,6 +284,7 @@ export function saveCustomParameter(
   datasetId: string,
   parameter: DatasetParameter,
 ): DatasetParameter[] {
+  pushCurrentStateToUndoStack();
   const existing = loadCustomParameters(datasetId);
   const index = existing.findIndex((p) => p.id === parameter.id);
   const next =
@@ -179,6 +311,7 @@ export function saveCustomParameter(
  * empleando una `DoublyLinkedList<Dataset>`.
  */
 export function saveCustomDataset(dataset: Dataset): Dataset[] {
+  pushCurrentStateToUndoStack();
   const customList = DoublyLinkedList.fromIterable(loadCustomDatasets());
   const existingNode = customList.findNode((d) => d.id === dataset.id);
 
@@ -221,9 +354,16 @@ export function deleteDatasetById(datasetId: string): boolean {
   const deletedIds = loadDeletedDatasetIds();
   const fullLinkedList = buildDatasetsLinkedList(customDatasets, deletedIds);
 
+  // Verificamos primero que el nodo exista en la Lista Doblemente Enlazada
+  if (!fullLinkedList.findNode((d) => d.id === datasetId)) {
+    return false;
+  }
+
+  // Apilamos el estado previo en la Pila de Deshacer antes de eliminar el nodo
+  pushCurrentStateToUndoStack();
+
   // Eliminamos el nodo directamente en la Lista Doblemente Enlazada
-  const wasRemoved = fullLinkedList.removeWhere((d) => d.id === datasetId);
-  if (!wasRemoved) return false;
+  fullLinkedList.removeWhere((d) => d.id === datasetId);
 
   // Si también estaba en la lista de datasets creados por el usuario, lo desconectamos allí
   const customLinkedList = DoublyLinkedList.fromIterable(customDatasets);

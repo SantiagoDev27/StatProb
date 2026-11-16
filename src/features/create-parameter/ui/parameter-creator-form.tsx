@@ -1,7 +1,14 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import {
   getCustomParametersServerSnapshot,
   getCustomParametersSnapshot,
@@ -16,12 +23,14 @@ import {
   type ParameterType,
 } from "@/entities/dataset";
 import { ROUTES } from "@/shared/config";
-import { cn } from "@/shared/lib";
+import { cn, UndoRedoHistory } from "@/shared/lib";
 import { Alert } from "@/shared/ui/alert";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
   BoltIcon,
   BroomIcon,
   HashIcon,
@@ -88,6 +97,21 @@ function buildInitialPresets(param?: DatasetParameter): {
   };
 }
 
+/**
+ * Instantánea completa del estado del editor de parámetros/datasets.
+ * Cada cambio apila el estado anterior en la Pila de Deshacer (`undoStack: Stack<ParameterEditorSnapshot>`)
+ * permitiendo revertir eliminaciones, inserciones o ediciones con `Ctrl + Z`.
+ */
+type ParameterEditorSnapshot = {
+  paramType: ParameterType;
+  datasetName: string;
+  parameterName: string;
+  quantRows: QuantitativeRow[];
+  qualRows: QualitativeRow[];
+  presets: QualitativePreset[];
+  activePresetId: string;
+};
+
 function ParameterEditorInner({
   mode,
   dataset,
@@ -99,87 +123,194 @@ function ParameterEditorInner({
 }) {
   const router = useRouter();
   const seqRef = useRef(100);
-  const initialPresetState = buildInitialPresets(editingParameter);
 
-  const [paramType, setParamType] = useState<ParameterType>(
-    editingParameter?.type ?? "quantitative",
-  );
-  const [datasetName, setDatasetName] = useState<string>(
-    dataset?.name ?? "Medición_Presión_Experimental_20",
-  );
-  const [parameterName, setParameterName] = useState<string>(
-    editingParameter?.name ??
-      (mode === "create-dataset" ? "Parametro_1" : "Nuevo_Parametro_1"),
-  );
-  const [quantRows, setQuantRows] = useState<QuantitativeRow[]>(() =>
-    buildInitialQuantRows(editingParameter),
-  );
-  const [qualRows, setQualRows] = useState<QualitativeRow[]>(() =>
-    buildInitialQualRows(editingParameter),
-  );
-  const [presets, setPresets] = useState<QualitativePreset[]>(
-    initialPresetState.presets,
-  );
-  const [activePresetId, setActivePresetId] = useState<string>(
-    initialPresetState.activePresetId,
-  );
+  // Estado unificado de presente + Pila de Deshacer (undoStack) y Pila de Rehacer (redoStack)
+  const [editorHistory, setEditorHistory] = useState<{
+    present: ParameterEditorSnapshot;
+    history: UndoRedoHistory<ParameterEditorSnapshot>;
+  }>(() => {
+    const initialPresetState = buildInitialPresets(editingParameter);
+    return {
+      present: {
+        paramType: editingParameter?.type ?? "quantitative",
+        datasetName: dataset?.name ?? "Medición_Presión_Experimental_20",
+        parameterName:
+          editingParameter?.name ??
+          (mode === "create-dataset" ? "Parametro_1" : "Nuevo_Parametro_1"),
+        quantRows: buildInitialQuantRows(editingParameter),
+        qualRows: buildInitialQualRows(editingParameter),
+        presets: initialPresetState.presets,
+        activePresetId: initialPresetState.activePresetId,
+      },
+      history: new UndoRedoHistory<ParameterEditorSnapshot>(80),
+    };
+  });
+
+  const { present, history } = editorHistory;
+  const {
+    paramType,
+    datasetName,
+    parameterName,
+    quantRows,
+    qualRows,
+    presets,
+    activePresetId,
+  } = present;
+
   const [error, setError] = useState<string | null>(null);
+
+  /**
+   * Registra el estado actual en la Pila de Deshacer (`undoStack.push(prev.present)`)
+   * y actualiza el estado presente.
+   */
+  const commitChange = useCallback(
+    (
+      updater: (
+        current: ParameterEditorSnapshot,
+      ) => ParameterEditorSnapshot,
+    ) => {
+      setEditorHistory((prev) => {
+        const nextPresent = updater(prev.present);
+        return {
+          present: nextPresent,
+          history: prev.history.record(prev.present),
+        };
+      });
+    },
+    [],
+  );
+
+  /**
+   * Deshace la última acción (`Ctrl + Z`) desapilando de `undoStack.pop()`
+   * y apilando el estado actual en `redoStack.push(present)`.
+   */
+  const handleUndo = useCallback(() => {
+    setEditorHistory((prev) => {
+      if (!prev.history.canUndo) return prev;
+      const { state: restored, history: nextHistory } = prev.history.undo(
+        prev.present,
+      );
+      if (!restored) return prev;
+      return {
+        present: restored,
+        history: nextHistory,
+      };
+    });
+  }, []);
+
+  /**
+   * Rehace la última acción revertida (`Ctrl + Y` / `Ctrl + Shift + Z`)
+   * desapilando de `redoStack.pop()` y apilando en `undoStack.push(present)`.
+   */
+  const handleRedo = useCallback(() => {
+    setEditorHistory((prev) => {
+      if (!prev.history.canRedo) return prev;
+      const { state: restored, history: nextHistory } = prev.history.redo(
+        prev.present,
+      );
+      if (!restored) return prev;
+      return {
+        present: restored,
+        history: nextHistory,
+      };
+    });
+  }, []);
+
+  // Atajos de teclado globales en el editor: Ctrl+Z (Deshacer) y Ctrl+Y / Ctrl+Shift+Z (Rehacer)
+  useEffect(() => {
+    function handleKeyDown(event: globalThis.KeyboardEvent) {
+      const isCtrlOrMeta = event.ctrlKey || event.metaKey;
+      if (!isCtrlOrMeta) return;
+
+      const key = event.key.toLowerCase();
+      if (key === "z" && !event.shiftKey) {
+        event.preventDefault();
+        handleUndo();
+      } else if (key === "y" || (key === "z" && event.shiftKey)) {
+        event.preventDefault();
+        handleRedo();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleUndo, handleRedo]);
 
   function handleClear() {
     setError(null);
     seqRef.current += 1;
-    if (paramType === "quantitative") {
-      setQuantRows([
-        { id: `q-clear-${seqRef.current}`, label: "Muestra_Ensayo_A1", value: 0 },
-      ]);
-    } else {
+    const clearSeq = seqRef.current;
+
+    commitChange((curr) => {
+      if (curr.paramType === "quantitative") {
+        return {
+          ...curr,
+          quantRows: [
+            {
+              id: `q-clear-${clearSeq}`,
+              label: "Muestra_Ensayo_A1",
+              value: 0,
+            },
+          ],
+        };
+      }
       const currentPreset =
-        presets.find((p) => p.id === activePresetId) ?? presets[0];
+        curr.presets.find((p) => p.id === curr.activePresetId) ??
+        curr.presets[0];
       const defaultCategory = currentPreset?.levels[0] ?? "Nivel_1";
-      setQualRows([
-        {
-          id: `c-clear-${seqRef.current}`,
-          label: "CASE_#8901",
-          category: defaultCategory,
-        },
-      ]);
-    }
+      return {
+        ...curr,
+        qualRows: [
+          {
+            id: `c-clear-${clearSeq}`,
+            label: "CASE_#8901",
+            category: defaultCategory,
+          },
+        ],
+      };
+    });
   }
 
   function handleSelectPreset(presetId: string) {
-    setActivePresetId(presetId);
-    const chosen = presets.find((p) => p.id === presetId);
-    if (!chosen || chosen.levels.length === 0) return;
-
-    setQualRows((prev) =>
-      prev.map((row, idx) => ({
-        ...row,
-        category: chosen.levels.includes(row.category)
-          ? row.category
-          : chosen.levels[idx % chosen.levels.length],
-      })),
-    );
+    commitChange((curr) => {
+      const chosen = curr.presets.find((p) => p.id === presetId);
+      if (!chosen || chosen.levels.length === 0) {
+        return { ...curr, activePresetId: presetId };
+      }
+      return {
+        ...curr,
+        activePresetId: presetId,
+        qualRows: curr.qualRows.map((row, idx) => ({
+          ...row,
+          category: chosen.levels.includes(row.category)
+            ? row.category
+            : chosen.levels[idx % chosen.levels.length],
+        })),
+      };
+    });
   }
 
   function handleAddLevelToActivePreset(newLevel: string) {
-    setPresets((prev) =>
-      prev.map((preset) =>
-        preset.id === activePresetId && !preset.levels.includes(newLevel)
+    commitChange((curr) => ({
+      ...curr,
+      presets: curr.presets.map((preset) =>
+        preset.id === curr.activePresetId && !preset.levels.includes(newLevel)
           ? { ...preset, levels: [...preset.levels, newLevel] }
           : preset,
       ),
-    );
+    }));
   }
 
   function handleCreateCustomPreset(customPreset: QualitativePreset) {
-    setPresets((prev) => [...prev, customPreset]);
-    setActivePresetId(customPreset.id);
-    setQualRows((prev) =>
-      prev.map((row, idx) => ({
+    commitChange((curr) => ({
+      ...curr,
+      presets: [...curr.presets, customPreset],
+      activePresetId: customPreset.id,
+      qualRows: curr.qualRows.map((row, idx) => ({
         ...row,
         category: customPreset.levels[idx % customPreset.levels.length],
       })),
-    );
+    }));
   }
 
   function handleSaveAndCalculate() {
@@ -325,8 +456,46 @@ function ParameterEditorInner({
           )}
         </div>
 
-        {/* Únicos 2 botones superiores de acción según el diseño */}
-        <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-end">
+        {/* Controles superiores: Deshacer/Rehacer (Pilas) + Limpiar + Guardar */}
+        <div className="flex flex-wrap items-center gap-2 self-start lg:self-end">
+          <div
+            role="group"
+            aria-label="Historial de cambios (Pila Undo/Redo)"
+            className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface p-1"
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleUndo}
+              disabled={!history.canUndo}
+              title="Deshacer último cambio (Ctrl + Z)"
+              aria-label="Deshacer último cambio (Ctrl + Z)"
+              className="h-8 px-2.5 text-xs"
+            >
+              <ArrowLeftIcon className="size-3.5" />
+              <span>Deshacer</span>
+              <span className="rounded bg-background/80 px-1.5 py-0.5 font-mono text-[10px] text-primary">
+                {history.undoCount}
+              </span>
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRedo}
+              disabled={!history.canRedo}
+              title="Rehacer cambio (Ctrl + Y)"
+              aria-label="Rehacer cambio (Ctrl + Y)"
+              className="h-8 px-2.5 text-xs"
+            >
+              <span>Rehacer</span>
+              <span className="rounded bg-background/80 px-1.5 py-0.5 font-mono text-[10px] text-muted">
+                {history.redoCount}
+              </span>
+              <ArrowRightIcon className="size-3.5" />
+            </Button>
+          </div>
+
           <Button
             variant="outline"
             size="md"
@@ -377,7 +546,10 @@ function ParameterEditorInner({
                   id="dataset-identifier-input"
                   type="text"
                   value={datasetName}
-                  onChange={(e) => setDatasetName(e.target.value)}
+                  onChange={(e) => {
+                    const nextVal = e.target.value;
+                    commitChange((curr) => ({ ...curr, datasetName: nextVal }));
+                  }}
                   className="w-full bg-transparent font-mono text-xs font-medium text-foreground outline-none"
                 />
               </div>
@@ -396,7 +568,13 @@ function ParameterEditorInner({
                   id="param-identifier-input"
                   type="text"
                   value={parameterName}
-                  onChange={(e) => setParameterName(e.target.value)}
+                  onChange={(e) => {
+                    const nextVal = e.target.value;
+                    commitChange((curr) => ({
+                      ...curr,
+                      parameterName: nextVal,
+                    }));
+                  }}
                   className="w-full bg-transparent font-mono text-xs font-medium text-foreground outline-none"
                 />
               </div>
@@ -416,7 +594,13 @@ function ParameterEditorInner({
                 id="matrix-identifier-input"
                 type="text"
                 value={parameterName}
-                onChange={(e) => setParameterName(e.target.value)}
+                onChange={(e) => {
+                  const nextVal = e.target.value;
+                  commitChange((curr) => ({
+                    ...curr,
+                    parameterName: nextVal,
+                  }));
+                }}
                 className="w-full bg-transparent font-mono text-xs font-medium text-foreground outline-none"
               />
             </div>
@@ -436,7 +620,9 @@ function ParameterEditorInner({
           >
             <button
               type="button"
-              onClick={() => setParamType("qualitative")}
+              onClick={() =>
+                commitChange((curr) => ({ ...curr, paramType: "qualitative" }))
+              }
               aria-pressed={paramType === "qualitative"}
               className={cn(
                 "flex items-center gap-2 rounded-md px-3.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-wider transition-colors",
@@ -451,7 +637,9 @@ function ParameterEditorInner({
 
             <button
               type="button"
-              onClick={() => setParamType("quantitative")}
+              onClick={() =>
+                commitChange((curr) => ({ ...curr, paramType: "quantitative" }))
+              }
               aria-pressed={paramType === "quantitative"}
               className={cn(
                 "flex items-center gap-2 rounded-md px-3.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-wider transition-colors",
@@ -472,7 +660,9 @@ function ParameterEditorInner({
         <QuantitativeMatrixEditor
           parameterName={parameterName}
           rows={quantRows}
-          onChangeRows={setQuantRows}
+          onChangeRows={(nextRows) =>
+            commitChange((curr) => ({ ...curr, quantRows: nextRows }))
+          }
         />
       ) : (
         <QualitativeMatrixEditor
@@ -480,7 +670,9 @@ function ParameterEditorInner({
           rows={qualRows}
           presets={presets}
           activePresetId={activePresetId}
-          onChangeRows={setQualRows}
+          onChangeRows={(nextRows) =>
+            commitChange((curr) => ({ ...curr, qualRows: nextRows }))
+          }
           onSelectPreset={handleSelectPreset}
           onAddLevelToActivePreset={handleAddLevelToActivePreset}
           onCreateCustomPreset={handleCreateCustomPreset}

@@ -1,10 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   DatasetCard,
   deleteDatasetById,
+  redoDatasetsChange,
+  undoDatasetsChange,
   useDatasetsLinkedList,
+  useDatasetsUndoRedo,
   type Dataset,
 } from "@/entities/dataset";
 import {
@@ -16,17 +19,54 @@ import { cn, DoublyLinkedList } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
-import { FolderChartIcon } from "@/shared/ui/icons";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  FolderChartIcon,
+} from "@/shared/ui/icons";
 
 type DatasetFilter = "all" | "individual" | "grouped" | "recent";
 
 export function DatasetsGrid() {
   // 1. Obtenemos la Lista Doblemente Enlazada (DoublyLinkedList<Dataset>) principal
   const datasetsLinkedList = useDatasetsLinkedList();
+  const { canUndo, canRedo, undoCount, redoCount } = useDatasetsUndoRedo();
   const allDatasets = useMemo(
     () => datasetsLinkedList.toArray(),
     [datasetsLinkedList],
   );
+
+  // Atajos de teclado Ctrl+Z (Deshacer borrado/cambio de dataset) y Ctrl+Y / Ctrl+Shift+Z (Rehacer)
+  useEffect(() => {
+    function handleKeyDown(event: globalThis.KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      const isCtrlOrMeta = event.ctrlKey || event.metaKey;
+      if (!isCtrlOrMeta) return;
+
+      const key = event.key.toLowerCase();
+      if (key === "z" && !event.shiftKey) {
+        if (undoDatasetsChange()) {
+          event.preventDefault();
+        }
+      } else if (key === "y" || (key === "z" && event.shiftKey)) {
+        if (redoDatasetsChange()) {
+          event.preventDefault();
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // 2. Aplicamos búsqueda por prefijo con el Trie sobre los datasets de la lista
   const searchQuery = useDatasetSearchQuery();
@@ -95,31 +135,72 @@ export function DatasetsGrid() {
           </p>
         </div>
 
-        <div
-          role="tablist"
-          aria-label="Filtrar datasets"
-          className="inline-flex flex-wrap items-center gap-1 self-start rounded-lg border border-border bg-background/70 p-1"
-        >
-          {filterTabs.map((tab) => {
-            const isActive = activeFilter === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => setActiveFilter(tab.id)}
-                className={cn(
-                  "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-                  isActive
-                    ? "bg-surface-hover text-foreground shadow-xs"
-                    : "text-muted hover:text-foreground",
-                )}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
+        <div className="flex flex-wrap items-center gap-2 self-start">
+          {/* Controles Deshacer / Rehacer basados en Pila (Stack) */}
+          <div
+            role="group"
+            aria-label="Deshacer o rehacer cambios en datasets"
+            className="inline-flex items-center gap-1 rounded-lg border border-border bg-background/70 p-1"
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => undoDatasetsChange()}
+              disabled={!canUndo}
+              title="Deshacer eliminación o cambio (Ctrl + Z)"
+              aria-label="Deshacer eliminación o cambio (Ctrl + Z)"
+              className="h-7 px-2.5 text-xs"
+            >
+              <ArrowLeftIcon className="size-3.5" />
+              <span>Deshacer</span>
+              <span className="rounded bg-surface px-1.5 py-0.5 font-mono text-[10px] text-primary">
+                {undoCount}
+              </span>
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => redoDatasetsChange()}
+              disabled={!canRedo}
+              title="Rehacer cambio (Ctrl + Y)"
+              aria-label="Rehacer cambio (Ctrl + Y)"
+              className="h-7 px-2.5 text-xs"
+            >
+              <span>Rehacer</span>
+              <span className="rounded bg-surface px-1.5 py-0.5 font-mono text-[10px] text-muted">
+                {redoCount}
+              </span>
+              <ArrowRightIcon className="size-3.5" />
+            </Button>
+          </div>
+
+          <div
+            role="tablist"
+            aria-label="Filtrar datasets"
+            className="inline-flex flex-wrap items-center gap-1 rounded-lg border border-border bg-background/70 p-1"
+          >
+            {filterTabs.map((tab) => {
+              const isActive = activeFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setActiveFilter(tab.id)}
+                  className={cn(
+                    "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                    isActive
+                      ? "bg-surface-hover text-foreground shadow-xs"
+                      : "text-muted hover:text-foreground",
+                  )}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
