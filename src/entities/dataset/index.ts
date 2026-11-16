@@ -39,11 +39,14 @@ export {
   parseCustomDatasetsSnapshot,
   parseCustomParametersSnapshot,
   parseDeletedDatasetIdsSnapshot,
+  redoDatasetsChange,
   saveCustomDataset,
   saveCustomParameter,
   subscribeCustomParameters,
+  undoDatasetsChange,
   useAllDatasets,
   useDatasetById,
   useDatasetsLinkedList,
+  useDatasetsUndoRedo,
 } from "./lib/custom-parameters-storage";
 export { DatasetCard } from "./ui/dataset-card";
