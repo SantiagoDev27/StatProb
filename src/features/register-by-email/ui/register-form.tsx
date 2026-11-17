@@ -1,6 +1,10 @@
 "use client";
 
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { firebaseAuth, getFirebaseAuthErrorMessage } from "@/shared/api";
+import { ROUTES } from "@/shared/config";
 import { Alert } from "@/shared/ui/alert";
 import { Button } from "@/shared/ui/button";
 import { ArrowRightIcon, UserIcon } from "@/shared/ui/icons";
@@ -8,23 +12,31 @@ import { InputField, PasswordField } from "@/shared/ui/input-field";
 import { validateRegister, type RegisterErrors } from "../model/validate-register";
 
 export function RegisterForm() {
+  const router = useRouter();
   const [errors, setErrors] = useState<RegisterErrors>({});
-  const [message, setMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const email = String(data.get("email") ?? "").trim();
     const password = String(data.get("password") ?? "");
 
-    setMessage(null);
+    setErrorMessage(null);
 
     const nextErrors = validateRegister({ email, password });
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    // TODO: conectar con la API de registro.
-    setMessage("El registro aún no está disponible. Muy pronto podrás crear tu cuenta.");
+    try {
+      setPending(true);
+      await createUserWithEmailAndPassword(firebaseAuth, email, password);
+      router.push(ROUTES.main);
+    } catch (error) {
+      setErrorMessage(getFirebaseAuthErrorMessage(error));
+      setPending(false);
+    }
   }
 
   return (
@@ -47,13 +59,12 @@ export function RegisterForm() {
         error={errors.password}
       />
 
-      {message && <Alert>{message}</Alert>}
+      {errorMessage && <Alert tone="error">{errorMessage}</Alert>}
 
-      <Button type="submit" size="lg" fullWidth className="mt-2">
-        Registrarse en StatProb
+      <Button type="submit" size="lg" fullWidth disabled={pending} className="mt-2">
+        {pending ? "Creando cuenta…" : "Registrarse en StatProb"}
         <ArrowRightIcon />
       </Button>
     </form>
   );
 }
-

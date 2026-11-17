@@ -1,9 +1,11 @@
 "use client";
 
+import { signOut } from "firebase/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { MOCK_USER } from "@/entities/user";
+import { firebaseAuth } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
 import { cn } from "@/shared/lib";
 import { Avatar } from "@/shared/ui/avatar";
@@ -41,8 +43,13 @@ export function ProfileMenu() {
     };
   }, [open]);
 
-  function handleLogout() {
+  async function handleLogout() {
     setOpen(false);
+    try {
+      await signOut(firebaseAuth);
+    } catch {
+      // Ignora errores de cierre de sesión si se entró con el flag admin de pruebas
+    }
     router.push(ROUTES.login);
   }
 

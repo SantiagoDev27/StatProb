@@ -1,2 +1,6 @@
-export { firebaseApp } from "./firebase";
-
+export {
+  firebaseApp,
+  firebaseAuth,
+  getFirebaseAuthErrorMessage,
+  googleAuthProvider,
+} from "./firebase";
