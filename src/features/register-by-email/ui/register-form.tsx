@@ -3,6 +3,7 @@
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { createUserRecordInDb } from "@/entities/user";
 import { firebaseAuth, getFirebaseAuthErrorMessage } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
 import { Alert } from "@/shared/ui/alert";
@@ -31,7 +32,12 @@ export function RegisterForm() {
 
     try {
       setPending(true);
-      await createUserWithEmailAndPassword(firebaseAuth, email, password);
+      const credential = await createUserWithEmailAndPassword(
+        firebaseAuth,
+        email,
+        password,
+      );
+      await createUserRecordInDb(credential.user, email);
       router.push(ROUTES.main);
     } catch (error) {
       setErrorMessage(getFirebaseAuthErrorMessage(error));

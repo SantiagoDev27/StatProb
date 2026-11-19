@@ -3,6 +3,7 @@
 import { signInWithPopup } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ensureUserRecordInDb } from "@/entities/user";
 import {
   firebaseAuth,
   getFirebaseAuthErrorMessage,
@@ -24,7 +25,8 @@ export function GoogleSignInButton() {
     setPending(true);
 
     try {
-      await signInWithPopup(firebaseAuth, googleAuthProvider);
+      const credential = await signInWithPopup(firebaseAuth, googleAuthProvider);
+      await ensureUserRecordInDb(credential.user);
       router.push(ROUTES.main);
     } catch (error) {
       setErrorMessage(getFirebaseAuthErrorMessage(error));

@@ -1,5 +1,5 @@
 /**
- * Flag de pruebas: permite entrar a /main escribiendo "admin" como usuario y contraseña.
+ * Flag de pruebas: permite entrar a /main escribiendo "local" como usuario y contraseña.
  *
  * Activa por defecto. Para desactivarla define en `.env.local`:
  *   NEXT_PUBLIC_ADMIN_TEST_LOGIN=false
@@ -8,7 +8,7 @@
  */
 export const ADMIN_TEST_LOGIN = {
   enabled: process.env.NEXT_PUBLIC_ADMIN_TEST_LOGIN !== "false",
-  username: "admin",
-  password: "admin",
+  username: "local",
+  password: "local",
 } as const;
 

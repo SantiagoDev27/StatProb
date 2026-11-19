@@ -4,7 +4,7 @@ import { signOut } from "firebase/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { MOCK_USER } from "@/entities/user";
+import { useCurrentUser } from "@/entities/user";
 import { firebaseAuth } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
 import { cn } from "@/shared/lib";
@@ -13,12 +13,12 @@ import { Badge } from "@/shared/ui/badge";
 import {
   ChevronRightIcon,
   LogOutIcon,
-  SettingsIcon,
   UserCogIcon,
 } from "@/shared/ui/icons";
 
 export function ProfileMenu() {
   const router = useRouter();
+  const { user } = useCurrentUser();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -68,7 +68,7 @@ export function ProfileMenu() {
             : "ring-1 ring-border-strong hover:ring-primary/50",
         )}
       >
-        <Avatar name={MOCK_USER.titleName} initials={MOCK_USER.initials} size="sm" />
+        <Avatar name={user.titleName} initials={user.initials} size="sm" />
       </button>
 
       {open && (
@@ -81,16 +81,16 @@ export function ProfileMenu() {
           <div className="flex items-center justify-between gap-3 border-b border-border bg-linear-to-r from-primary/15 via-surface to-surface px-4 py-4">
             <div className="flex min-w-0 items-center gap-3">
               <Avatar
-                name={MOCK_USER.titleName}
-                initials={MOCK_USER.initials}
+                name={user.titleName}
+                initials={user.initials}
                 size="md"
               />
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-foreground">
-                  {MOCK_USER.titleName}
+                  {user.titleName}
                 </p>
                 <p className="truncate font-mono text-[11px] text-muted">
-                  {MOCK_USER.email}
+                  {user.email}
                 </p>
               </div>
             </div>
@@ -148,13 +148,12 @@ export function ProfileMenu() {
           {/* Pie de estado */}
           <div className="flex items-center justify-between border-t border-border bg-background/60 px-4 py-2 font-mono text-[10px]">
             <span className="text-muted">
-              StatProb Cloud: {MOCK_USER.cloudRegion}
+              StatProb Cloud: {user.cloudRegion}
             </span>
-            <span className="text-success">Latencia: {MOCK_USER.latencyMs}ms</span>
+            <span className="text-success">Latencia: {user.latencyMs}ms</span>
           </div>
         </div>
       )}
     </div>
   );
 }
-
