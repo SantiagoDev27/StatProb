@@ -6,6 +6,7 @@ export {
   getDefaultUserNameFromEmail,
   getInitialsFromName,
   updateUserNameInDb,
+  updateUserPhotoInDb,
   type UserDatabaseRecord,
 } from "./model/user-db";
 export { useCurrentUser, type CurrentUserState } from "./model/use-current-user";

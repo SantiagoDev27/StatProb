@@ -5,6 +5,7 @@ import { firebaseAuth, firebaseDb } from "@/shared/api";
 export type UserDatabaseRecord = {
   name: string;
   email: string;
+  photoUrl?: string | null;
 };
 
 /**
@@ -77,11 +78,20 @@ export async function ensureUserRecordInDb(
         ? data.email.trim()
         : email;
 
+    const existingPhotoUrl =
+      typeof data?.photoUrl === "string" && data.photoUrl.trim().length > 0
+        ? data.photoUrl.trim()
+        : null;
+
     if (data?.name !== existingName || data?.email !== existingEmail) {
       await update(userRef, { name: existingName, email: existingEmail });
     }
 
-    return { name: existingName, email: existingEmail };
+    return {
+      name: existingName,
+      email: existingEmail,
+      photoUrl: existingPhotoUrl,
+    };
   }
 
   return createUserRecordInDb(user, email);
@@ -108,4 +118,17 @@ export async function updateUserNameInDb(
       displayName: trimmedName,
     }).catch(() => {});
   }
+}
+
+/**
+ * Actualiza o elimina la foto de perfil del usuario en Firebase Realtime Database (`users/{uid}/photoUrl`).
+ * Recibe una imagen comprimida en formato Data URL (Base64) o `null` para eliminarla.
+ */
+export async function updateUserPhotoInDb(
+  uid: string,
+  photoDataUrl: string | null,
+): Promise<void> {
+  await update(ref(firebaseDb, `users/${uid}`), {
+    photoUrl: photoDataUrl,
+  });
 }

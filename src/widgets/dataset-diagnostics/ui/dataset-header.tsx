@@ -5,7 +5,6 @@ import { Button, ButtonLink } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import {
   ArrowLeftIcon,
-  DownloadIcon,
   FileEditIcon,
   PlusIcon,
   RefreshIcon,

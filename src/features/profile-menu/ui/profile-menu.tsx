@@ -68,7 +68,12 @@ export function ProfileMenu() {
             : "ring-1 ring-border-strong hover:ring-primary/50",
         )}
       >
-        <Avatar name={user.titleName} initials={user.initials} size="sm" />
+        <Avatar
+          name={user.titleName}
+          initials={user.initials}
+          src={user.photoUrl}
+          size="sm"
+        />
       </button>
 
       {open && (
@@ -83,6 +88,7 @@ export function ProfileMenu() {
               <Avatar
                 name={user.titleName}
                 initials={user.initials}
+                src={user.photoUrl}
                 size="md"
               />
               <div className="min-w-0">

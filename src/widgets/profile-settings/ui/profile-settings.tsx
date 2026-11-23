@@ -3,27 +3,23 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { getInitialsFromName, useCurrentUser } from "@/entities/user";
+import { AvatarUploader } from "@/features/upload-avatar";
 import { ROUTES } from "@/shared/config";
 import { Alert } from "@/shared/ui/alert";
-import { Avatar } from "@/shared/ui/avatar";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import {
   ArrowLeftIcon,
-  CloudUploadIcon,
   IdCardIcon,
   InfoIcon,
   LockIcon,
   SaveIcon,
-  TrashIcon,
-  UploadIcon,
-  UserCogIcon,
 } from "@/shared/ui/icons";
 import { InputField } from "@/shared/ui/input-field";
 
 export function ProfileSettings() {
-  const { user, updateName } = useCurrentUser();
+  const { user, updateName, updatePhoto } = useCurrentUser();
   const [draftName, setDraftName] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
@@ -111,63 +107,12 @@ export function ProfileSettings() {
       </div>
 
       {/* Sección 1: Identidad visual y foto de perfil */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between gap-4 border-b border-border/60 pb-4">
-          <h2 className="flex items-center gap-2.5 text-sm font-semibold text-foreground">
-            <UserCogIcon className="size-4.5 text-primary" />
-            1. Identidad Visual y Foto de Perfil
-          </h2>
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-            Avatar telemetry
-          </span>
-        </div>
-
-        <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-center">
-          <Avatar
-            name={previewName}
-            initials={previewInitials}
-            size="lg"
-            online
-          />
-
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <Button type="button" size="sm" className="h-9 px-4 text-xs font-semibold">
-                <UploadIcon className="size-3.5" />
-                Subir Nueva Foto
-              </Button>
-              <Button type="button" variant="outline" size="sm" className="h-9 px-4 text-xs">
-                <TrashIcon className="size-3.5 text-muted" />
-                Eliminar foto
-              </Button>
-            </div>
-
-            <div className="flex items-start gap-2 text-xs leading-5 text-muted">
-              <InfoIcon className="mt-0.5 size-3.5 shrink-0 text-muted" />
-              <p>
-                Formatos admitidos:{" "}
-                <span className="font-mono text-foreground">JPG, PNG o WEBP</span>.
-                Máximo <span className="font-mono text-foreground">5 MB</span>.
-                <br />
-                Tamaño recomendado:{" "}
-                <span className="font-mono text-primary">400×400 px</span> con encuadre
-                centrado.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Zona de arrastre */}
-        <div className="mt-6 flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border-strong bg-background/50 px-6 py-8 text-center">
-          <CloudUploadIcon className="size-6 text-muted" />
-          <p className="text-xs font-medium text-foreground">
-            O arrastra y suelta un archivo de imagen aquí
-          </p>
-          <p className="font-mono text-[11px] text-muted">
-            Detecta compresión alfa y recorte de proporción 1:1
-          </p>
-        </div>
-      </Card>
+      <AvatarUploader
+        name={previewName}
+        initials={previewInitials}
+        photoUrl={user.photoUrl}
+        onUpdatePhoto={updatePhoto}
+      />
 
       {/* Sección 2: Nombre y datos personales */}
       <Card className="p-6">
