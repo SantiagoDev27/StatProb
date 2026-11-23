@@ -5,19 +5,18 @@ import { Button, ButtonLink } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import {
   ArrowLeftIcon,
-  DownloadIcon,
   FileEditIcon,
   PlusIcon,
   RefreshIcon,
 } from "@/shared/ui/icons";
 
-type DatasetHeaderProps = {
+interface DatasetHeaderProps {
   dataset: Dataset;
   parameters: DatasetParameter[];
   selectedParameter: DatasetParameter;
   onSelectParameter: (parameterId: string) => void;
   onRecalculate: () => void;
-};
+}
 
 export function DatasetHeader({
   dataset,
