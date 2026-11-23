@@ -1,8 +1,9 @@
 "use client";
 
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { resetDatasetsClientState } from "@/entities/dataset";
 import { ensureUserRecordInDb } from "@/entities/user";
 import { firebaseAuth, getFirebaseAuthErrorMessage } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
@@ -30,6 +31,12 @@ export function LoginForm() {
     if (isAdminTestLogin(email, password)) {
       setErrors({});
       setPending(true);
+      try {
+        await signOut(firebaseAuth);
+      } catch {
+        // Ignorar si no había sesión activa
+      }
+      resetDatasetsClientState();
       router.push(ROUTES.main);
       return;
     }

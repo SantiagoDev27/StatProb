@@ -16,8 +16,9 @@ import {
   useDatasetTrieSearch,
 } from "@/features/search-datasets";
 import { cn, DoublyLinkedList } from "@/shared/lib";
+import { ROUTES } from "@/shared/config";
 import { Badge } from "@/shared/ui/badge";
-import { Button } from "@/shared/ui/button";
+import { Button, ButtonLink } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import {
   ArrowLeftIcon,
@@ -206,24 +207,47 @@ export function DatasetsGrid() {
 
       {filteredDatasets.length === 0 ? (
         <div className="mt-5 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background/40 py-10 text-center">
-          <p className="text-sm font-medium text-foreground">
-            No se encontraron datasets que coincidan con{" "}
-            <span className="font-mono text-primary">
-              &ldquo;{searchQuery}&rdquo;
-            </span>
-          </p>
-          <p className="text-xs text-muted">
-            El árbol de prefijos (Trie) no halló coincidencias para ese término.
-          </p>
-          {searchQuery.trim().length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setDatasetSearchQuery("")}
-              className="mt-1 text-xs"
-            >
-              Limpiar búsqueda
-            </Button>
+          {searchQuery.trim().length > 0 ? (
+            <>
+              <p className="text-sm font-medium text-foreground">
+                No se encontraron datasets que coincidan con{" "}
+                <span className="font-mono text-primary">
+                  &ldquo;{searchQuery}&rdquo;
+                </span>
+              </p>
+              <p className="text-xs text-muted">
+                El árbol de prefijos (Trie) no halló coincidencias para ese término.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDatasetSearchQuery("")}
+                className="mt-1 text-xs"
+              >
+                Limpiar búsqueda
+              </Button>
+            </>
+          ) : allDatasets.length === 0 ? (
+            <>
+              <p className="text-sm font-medium text-foreground">
+                Aún no has creado ningún dataset
+              </p>
+              <p className="max-w-md text-xs text-muted">
+                Tus datasets se guardan automáticamente en tu cuenta en tiempo real.
+                Crea tu primer dataset individual para comenzar a analizar datos.
+              </p>
+              <ButtonLink
+                href={ROUTES.datasetCreate}
+                size="sm"
+                className="mt-1 text-xs font-semibold"
+              >
+                Crear Dataset Individual
+              </ButtonLink>
+            </>
+          ) : (
+            <p className="text-sm font-medium text-muted">
+              No hay datasets en esta categoría todavía.
+            </p>
           )}
         </div>
       ) : (

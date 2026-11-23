@@ -328,9 +328,16 @@ function ParameterEditorInner({
     }
 
     seqRef.current += 1;
+    const uniqueSuffix = `${Date.now().toString(36)}-${seqRef.current}`;
+    const paramSlug = cleanParamName
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9-_]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
     const targetParamId =
-      editingParameter?.id ??
-      `${cleanParamName.toLowerCase()}-${seqRef.current}`;
+      editingParameter?.id ?? `${paramSlug || "param"}-${uniqueSuffix}`;
 
     let savedParam: DatasetParameter;
 
@@ -378,10 +385,13 @@ function ParameterEditorInner({
 
     if (mode === "create-dataset" || !dataset) {
       const slug = cleanDatasetName
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase()
         .replace(/[^a-z0-9-_]/g, "-")
-        .replace(/-+/g, "-");
-      const newDatasetId = `${slug || "dataset"}-${seqRef.current}`;
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+      const newDatasetId = `${slug || "dataset"}-${uniqueSuffix}`;
       const obsCount = savedParam.values.length;
 
       const newDataset: Dataset = {

@@ -1,9 +1,17 @@
 "use client";
 
+import { onAuthStateChanged } from "firebase/auth";
 import { useMemo, useSyncExternalStore } from "react";
+import { firebaseAuth } from "@/shared/api";
 import { DoublyLinkedList, Stack } from "@/shared/lib";
 import { MOCK_DATASETS } from "../model/mock-datasets";
 import type { Dataset, DatasetParameter } from "../model/types";
+import {
+  deleteDatasetInDb,
+  replaceAllDatasetsInDb,
+  saveDatasetInDb,
+  subscribeUserDatasetsInDb,
+} from "./dataset-db";
 
 const STORAGE_PREFIX = "statprob:custom-params:";
 const DATASETS_STORAGE_KEY = "statprob:custom-datasets";
@@ -11,10 +19,107 @@ const DELETED_DATASETS_STORAGE_KEY = "statprob:deleted-dataset-ids";
 const CHANGE_EVENT = "statprob:custom-params-changed";
 
 /**
+ * Estado sincronizado con Firebase Auth + Firebase Realtime Database.
+ * - `activeFirebaseUid === null`: usuario de prueba (`local/local`), usa `MOCK_DATASETS` + `sessionStorage`.
+ * - `activeFirebaseUid !== null`: usuario real autenticado, muestra y persiste SOLO sus datasets en Realtime Database.
+ */
+let authSyncInitialized = false;
+let activeFirebaseUid: string | null = null;
+let remoteDatasets: Dataset[] = [];
+let remoteDatasetsRawSnapshot = "[]";
+let unsubscribeRemoteDatasets: (() => void) | null = null;
+
+function notifyDatasetSubscribers(): void {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(CHANGE_EVENT));
+  }
+}
+
+function setRemoteDatasetsState(nextDatasets: Dataset[]): void {
+  remoteDatasets = nextDatasets;
+  remoteDatasetsRawSnapshot = JSON.stringify(nextDatasets);
+  notifyDatasetSubscribers();
+}
+
+/**
+ * Limpia completamente el estado local y en memoria de datasets, parámetros
+ * y pilas de Deshacer/Rehacer (se invoca al cerrar sesión o cambiar de cuenta).
+ */
+export function resetDatasetsClientState(): void {
+  if (unsubscribeRemoteDatasets) {
+    unsubscribeRemoteDatasets();
+    unsubscribeRemoteDatasets = null;
+  }
+  activeFirebaseUid = null;
+  remoteDatasets = [];
+  remoteDatasetsRawSnapshot = "[]";
+  datasetsUndoStack.clear();
+  datasetsRedoStack.clear();
+
+  if (typeof window !== "undefined") {
+    try {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < window.sessionStorage.length; i++) {
+        const key = window.sessionStorage.key(i);
+        if (key && key.startsWith("statprob:")) {
+          keysToRemove.push(key);
+        }
+      }
+      for (const key of keysToRemove) {
+        window.sessionStorage.removeItem(key);
+      }
+      window.localStorage.removeItem("statprob:local-profile-photo");
+    } catch {
+      // Ignorar si storage no está disponible
+    }
+    notifyDatasetSubscribers();
+  }
+}
+
+function ensureAuthDatasetsSync(): void {
+  if (typeof window === "undefined" || authSyncInitialized) return;
+  authSyncInitialized = true;
+
+  onAuthStateChanged(firebaseAuth, (firebaseUser) => {
+    if (unsubscribeRemoteDatasets) {
+      unsubscribeRemoteDatasets();
+      unsubscribeRemoteDatasets = null;
+    }
+
+    const nextUid = firebaseUser?.uid ?? null;
+    if (nextUid !== activeFirebaseUid) {
+      // Al cambiar de usuario, reiniciamos las pilas de Undo/Redo para no mezclar historiales
+      datasetsUndoStack.clear();
+      datasetsRedoStack.clear();
+    }
+
+    activeFirebaseUid = nextUid;
+
+    if (!nextUid) {
+      setRemoteDatasetsState([]);
+      return;
+    }
+
+    // Iniciamos en lista vacía hasta recibir el snapshot de Realtime Database (sin MOCK_DATASETS)
+    setRemoteDatasetsState([]);
+
+    unsubscribeRemoteDatasets = subscribeUserDatasetsInDb(
+      nextUid,
+      (datasets) => {
+        if (activeFirebaseUid === nextUid) {
+          setRemoteDatasetsState(datasets);
+        }
+      },
+    );
+  });
+}
+
+/**
  * Instantánea del estado de los datasets almacenados para la Pila de Deshacer / Rehacer
  * (`datasetsUndoStack` / `datasetsRedoStack`).
  */
 type DatasetsStorageSnapshot = {
+  mode: "local" | "remote";
   customDatasets: Dataset[];
   deletedIds: string[];
   paramsByDatasetId: Record<string, DatasetParameter[]>;
@@ -24,6 +129,18 @@ const datasetsUndoStack = new Stack<DatasetsStorageSnapshot>(50);
 const datasetsRedoStack = new Stack<DatasetsStorageSnapshot>(50);
 
 function captureDatasetsStorageSnapshot(): DatasetsStorageSnapshot {
+  if (activeFirebaseUid) {
+    return {
+      mode: "remote",
+      customDatasets: remoteDatasets.map((ds) => ({
+        ...ds,
+        parameters: ds.parameters.map((p) => ({ ...p })),
+      })),
+      deletedIds: [],
+      paramsByDatasetId: {},
+    };
+  }
+
   const customDatasets = loadCustomDatasets();
   const deletedIds = loadDeletedDatasetIds();
   const paramsByDatasetId: Record<string, DatasetParameter[]> = {};
@@ -40,6 +157,7 @@ function captureDatasetsStorageSnapshot(): DatasetsStorageSnapshot {
   }
 
   return {
+    mode: "local",
     customDatasets,
     deletedIds,
     paramsByDatasetId,
@@ -48,6 +166,15 @@ function captureDatasetsStorageSnapshot(): DatasetsStorageSnapshot {
 
 function applyDatasetsStorageSnapshot(snapshot: DatasetsStorageSnapshot): void {
   if (typeof window === "undefined") return;
+
+  if (activeFirebaseUid && snapshot.mode === "remote") {
+    setRemoteDatasetsState(snapshot.customDatasets);
+    void replaceAllDatasetsInDb(activeFirebaseUid, snapshot.customDatasets).catch(
+      () => {},
+    );
+    return;
+  }
+
   try {
     window.sessionStorage.setItem(
       DATASETS_STORAGE_KEY,
@@ -69,7 +196,7 @@ function applyDatasetsStorageSnapshot(snapshot: DatasetsStorageSnapshot): void {
         window.sessionStorage.removeItem(getCustomParametersKey(datasetId));
       }
     }
-    window.dispatchEvent(new Event(CHANGE_EVENT));
+    notifyDatasetSubscribers();
   } catch {
     // Ignorar si sessionStorage no está disponible
   }
@@ -147,8 +274,14 @@ export function getCustomParametersKey(datasetId: string): string {
 
 export function getCustomParametersSnapshot(datasetId: string): string {
   if (typeof window === "undefined") return "[]";
+  if (activeFirebaseUid) {
+    // Para usuarios reales los parámetros ya viven dentro del Dataset en Realtime Database
+    return "[]";
+  }
   try {
-    return window.sessionStorage.getItem(getCustomParametersKey(datasetId)) ?? "[]";
+    return (
+      window.sessionStorage.getItem(getCustomParametersKey(datasetId)) ?? "[]"
+    );
   } catch {
     return "[]";
   }
@@ -160,6 +293,10 @@ export function getCustomParametersServerSnapshot(): string {
 
 export function getCustomDatasetsSnapshot(): string {
   if (typeof window === "undefined") return "[]";
+  ensureAuthDatasetsSync();
+  if (activeFirebaseUid) {
+    return remoteDatasetsRawSnapshot;
+  }
   try {
     return window.sessionStorage.getItem(DATASETS_STORAGE_KEY) ?? "[]";
   } catch {
@@ -169,6 +306,10 @@ export function getCustomDatasetsSnapshot(): string {
 
 export function getDeletedDatasetIdsSnapshot(): string {
   if (typeof window === "undefined") return "[]";
+  ensureAuthDatasetsSync();
+  if (activeFirebaseUid) {
+    return "[]";
+  }
   try {
     return window.sessionStorage.getItem(DELETED_DATASETS_STORAGE_KEY) ?? "[]";
   } catch {
@@ -176,8 +317,19 @@ export function getDeletedDatasetIdsSnapshot(): string {
   }
 }
 
+function getAuthUidSnapshot(): string {
+  if (typeof window === "undefined") return "";
+  ensureAuthDatasetsSync();
+  return activeFirebaseUid ?? "";
+}
+
+function getAuthUidServerSnapshot(): string {
+  return "";
+}
+
 export function subscribeCustomParameters(onChange: () => void): () => void {
   if (typeof window === "undefined") return () => {};
+  ensureAuthDatasetsSync();
   window.addEventListener("storage", onChange);
   window.addEventListener(CHANGE_EVENT, onChange);
   return () => {
@@ -229,12 +381,15 @@ export function loadDeletedDatasetIds(): string[] {
  * Construye la **Lista Doblemente Enlazada (`DoublyLinkedList<Dataset>`)** que
  * almacena todos los datasets activos de la sesión.
  *
- * - Cada dataset se inserta como un `DoublyLinkedNode<Dataset>` con punteros `prev` y `next`.
- * - Los datasets eliminados por el usuario son omitidos al poblar los nodos.
+ * - Si `includeMockDatasets` es `true` (usuario de prueba `local/local`), incluye
+ *   los datasets creados + `MOCK_DATASETS`.
+ * - Si `includeMockDatasets` es `false` (usuario autenticado con Firebase), incluye
+ *   exclusivamente los datasets creados por el usuario en Realtime Database.
  */
 export function buildDatasetsLinkedList(
   customDatasets: readonly Dataset[],
   deletedIds: readonly string[],
+  includeMockDatasets = true,
 ): DoublyLinkedList<Dataset> {
   const deletedSet = new Set(deletedIds);
   const list = new DoublyLinkedList<Dataset>();
@@ -245,9 +400,11 @@ export function buildDatasetsLinkedList(
     }
   }
 
-  for (const mock of MOCK_DATASETS) {
-    if (!deletedSet.has(mock.id)) {
-      list.append(mock);
+  if (includeMockDatasets) {
+    for (const mock of MOCK_DATASETS) {
+      if (!deletedSet.has(mock.id)) {
+        list.append(mock);
+      }
     }
   }
 
@@ -279,12 +436,42 @@ export function mergeDatasetParameters(
   return merged;
 }
 
-/** Guarda un parámetro nuevo o actualiza uno existente dentro de un dataset. */
+/**
+ * Guarda un parámetro nuevo o actualiza uno existente dentro de un dataset.
+ * - Para usuarios reales: actualiza el Dataset completo en Firebase Realtime Database.
+ * - Para el usuario de prueba: lo guarda en `sessionStorage`.
+ */
 export function saveCustomParameter(
   datasetId: string,
   parameter: DatasetParameter,
 ): DatasetParameter[] {
   pushCurrentStateToUndoStack();
+
+  if (activeFirebaseUid) {
+    const uid = activeFirebaseUid;
+    const targetDataset = remoteDatasets.find((d) => d.id === datasetId);
+    if (!targetDataset) return [parameter];
+
+    const updatedParameters = mergeDatasetParameters(targetDataset.parameters, [
+      parameter,
+    ]);
+    const obsCount = updatedParameters[0]?.values.length ?? 0;
+    const updatedDataset: Dataset = {
+      ...targetDataset,
+      parameters: updatedParameters,
+      variablesCount: updatedParameters.length,
+      sampleSize: obsCount.toLocaleString("en-US"),
+      sizeLabel: `${Math.max(1, Math.round(obsCount * updatedParameters.length * 0.4))} KB`,
+    };
+
+    const nextList = remoteDatasets.map((d) =>
+      d.id === datasetId ? updatedDataset : d,
+    );
+    setRemoteDatasetsState(nextList);
+    void saveDatasetInDb(uid, updatedDataset).catch(() => {});
+    return updatedParameters;
+  }
+
   const existing = loadCustomParameters(datasetId);
   const index = existing.findIndex((p) => p.id === parameter.id);
   const next =
@@ -298,7 +485,7 @@ export function saveCustomParameter(
         getCustomParametersKey(datasetId),
         JSON.stringify(next),
       );
-      window.dispatchEvent(new Event(CHANGE_EVENT));
+      notifyDatasetSubscribers();
     } catch {
       // Ignorar si sessionStorage no está disponible
     }
@@ -308,10 +495,29 @@ export function saveCustomParameter(
 
 /**
  * Inserta un nuevo Dataset al inicio (`prepend`, O(1)) o actualiza uno existente
- * empleando una `DoublyLinkedList<Dataset>`.
+ * empleando una `DoublyLinkedList<Dataset>`, sincronizando con Firebase Realtime Database
+ * cuando el usuario está autenticado.
  */
 export function saveCustomDataset(dataset: Dataset): Dataset[] {
   pushCurrentStateToUndoStack();
+
+  if (activeFirebaseUid) {
+    const uid = activeFirebaseUid;
+    const list = DoublyLinkedList.fromIterable(remoteDatasets);
+    const existingNode = list.findNode((d) => d.id === dataset.id);
+
+    if (existingNode) {
+      existingNode.value = dataset;
+    } else {
+      list.prepend(dataset);
+    }
+
+    const nextArray = list.toArray();
+    setRemoteDatasetsState(nextArray);
+    void saveDatasetInDb(uid, dataset).catch(() => {});
+    return nextArray;
+  }
+
   const customList = DoublyLinkedList.fromIterable(loadCustomDatasets());
   const existingNode = customList.findNode((d) => d.id === dataset.id);
 
@@ -336,7 +542,7 @@ export function saveCustomDataset(dataset: Dataset): Dataset[] {
         DATASETS_STORAGE_KEY,
         JSON.stringify(nextCustomArray),
       );
-      window.dispatchEvent(new Event(CHANGE_EVENT));
+      notifyDatasetSubscribers();
     } catch {
       // Ignorar si sessionStorage no está disponible
     }
@@ -347,25 +553,38 @@ export function saveCustomDataset(dataset: Dataset): Dataset[] {
 /**
  * Elimina un Dataset de la **Lista Doblemente Enlazada (`DoublyLinkedList<Dataset>`)**
  * desconectando su nodo (`removeWhere` -> `removeNode` en O(1) al reasignar `prev` y `next`)
- * y sincronizando el estado persistido de la sesión.
+ * y actualizando Firebase Realtime Database (o `sessionStorage` en modo prueba).
  */
 export function deleteDatasetById(datasetId: string): boolean {
+  if (activeFirebaseUid) {
+    const uid = activeFirebaseUid;
+    const list = DoublyLinkedList.fromIterable(remoteDatasets);
+    if (!list.findNode((d) => d.id === datasetId)) {
+      return false;
+    }
+
+    pushCurrentStateToUndoStack();
+    list.removeWhere((d) => d.id === datasetId);
+    setRemoteDatasetsState(list.toArray());
+    void deleteDatasetInDb(uid, datasetId).catch(() => {});
+    return true;
+  }
+
   const customDatasets = loadCustomDatasets();
   const deletedIds = loadDeletedDatasetIds();
-  const fullLinkedList = buildDatasetsLinkedList(customDatasets, deletedIds);
+  const fullLinkedList = buildDatasetsLinkedList(
+    customDatasets,
+    deletedIds,
+    true,
+  );
 
-  // Verificamos primero que el nodo exista en la Lista Doblemente Enlazada
   if (!fullLinkedList.findNode((d) => d.id === datasetId)) {
     return false;
   }
 
-  // Apilamos el estado previo en la Pila de Deshacer antes de eliminar el nodo
   pushCurrentStateToUndoStack();
-
-  // Eliminamos el nodo directamente en la Lista Doblemente Enlazada
   fullLinkedList.removeWhere((d) => d.id === datasetId);
 
-  // Si también estaba en la lista de datasets creados por el usuario, lo desconectamos allí
   const customLinkedList = DoublyLinkedList.fromIterable(customDatasets);
   customLinkedList.removeWhere((d) => d.id === datasetId);
 
@@ -384,7 +603,7 @@ export function deleteDatasetById(datasetId: string): boolean {
         JSON.stringify(nextDeletedIds),
       );
       window.sessionStorage.removeItem(getCustomParametersKey(datasetId));
-      window.dispatchEvent(new Event(CHANGE_EVENT));
+      notifyDatasetSubscribers();
     } catch {
       // Ignorar si sessionStorage no está disponible
     }
@@ -395,9 +614,15 @@ export function deleteDatasetById(datasetId: string): boolean {
 
 /**
  * Hook reactivo que devuelve la **Lista Doblemente Enlazada (`DoublyLinkedList<Dataset>`)**
- * con todos los datasets activos.
+ * con todos los datasets activos (solo los del usuario en Realtime Database si está
+ * autenticado; o los de prueba si está en modo `local/local`).
  */
 export function useDatasetsLinkedList(): DoublyLinkedList<Dataset> {
+  const authUid = useSyncExternalStore(
+    subscribeCustomParameters,
+    getAuthUidSnapshot,
+    getAuthUidServerSnapshot,
+  );
   const rawDatasets = useSyncExternalStore(
     subscribeCustomParameters,
     getCustomDatasetsSnapshot,
@@ -412,8 +637,9 @@ export function useDatasetsLinkedList(): DoublyLinkedList<Dataset> {
   return useMemo(() => {
     const customDatasets = parseCustomDatasetsSnapshot(rawDatasets);
     const deletedIds = parseDeletedDatasetIdsSnapshot(rawDeletedIds);
-    return buildDatasetsLinkedList(customDatasets, deletedIds);
-  }, [rawDatasets, rawDeletedIds]);
+    const isTestUser = authUid.length === 0;
+    return buildDatasetsLinkedList(customDatasets, deletedIds, isTestUser);
+  }, [authUid, rawDatasets, rawDeletedIds]);
 }
 
 /**
@@ -433,9 +659,16 @@ export function useDatasetById(
   id: string,
   fallbackDataset?: Dataset,
 ): Dataset | undefined {
-  const linkedList = useDatasetsLinkedList();
-  return useMemo(
-    () => linkedList.findNode((d) => d.id === id)?.value ?? fallbackDataset,
-    [linkedList, id, fallbackDataset],
+  const authUid = useSyncExternalStore(
+    subscribeCustomParameters,
+    getAuthUidSnapshot,
+    getAuthUidServerSnapshot,
   );
+  const linkedList = useDatasetsLinkedList();
+  return useMemo(() => {
+    const found = linkedList.findNode((d) => d.id === id)?.value;
+    if (found) return found;
+    // Si es un usuario autenticado, no mostrar datasets mockup como respaldo
+    return authUid.length > 0 ? undefined : fallbackDataset;
+  }, [authUid, linkedList, id, fallbackDataset]);
 }

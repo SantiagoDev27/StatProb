@@ -40,6 +40,7 @@ export {
   parseCustomParametersSnapshot,
   parseDeletedDatasetIdsSnapshot,
   redoDatasetsChange,
+  resetDatasetsClientState,
   saveCustomDataset,
   saveCustomParameter,
   subscribeCustomParameters,
@@ -49,4 +50,10 @@ export {
   useDatasetsLinkedList,
   useDatasetsUndoRedo,
 } from "./lib/custom-parameters-storage";
+export {
+  deleteDatasetInDb,
+  replaceAllDatasetsInDb,
+  saveDatasetInDb,
+  subscribeUserDatasetsInDb,
+} from "./lib/dataset-db";
 export { DatasetCard } from "./ui/dataset-card";
