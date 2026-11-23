@@ -1,7 +1,10 @@
 "use client";
 
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { ensureUserRecordInDb } from "@/entities/user";
+import { firebaseAuth, getFirebaseAuthErrorMessage } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
 import { Alert } from "@/shared/ui/alert";
 import { Button } from "@/shared/ui/button";
@@ -13,16 +16,16 @@ import { validateLogin, type LoginErrors } from "../model/validate-login";
 export function LoginForm() {
   const router = useRouter();
   const [errors, setErrors] = useState<LoginErrors>({});
-  const [message, setMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const email = String(data.get("email") ?? "").trim();
     const password = String(data.get("password") ?? "");
 
-    setMessage(null);
+    setErrorMessage(null);
 
     if (isAdminTestLogin(email, password)) {
       setErrors({});
@@ -35,8 +38,19 @@ export function LoginForm() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    // TODO: conectar con la API de autenticación.
-    setMessage("El inicio de sesión aún no está conectado al servidor.");
+    try {
+      setPending(true);
+      const credential = await signInWithEmailAndPassword(
+        firebaseAuth,
+        email,
+        password,
+      );
+      await ensureUserRecordInDb(credential.user);
+      router.push(ROUTES.main);
+    } catch (error) {
+      setErrorMessage(getFirebaseAuthErrorMessage(error));
+      setPending(false);
+    }
   }
 
   return (
@@ -68,7 +82,7 @@ export function LoginForm() {
         }
       />
 
-      {message && <Alert>{message}</Alert>}
+      {errorMessage && <Alert tone="error">{errorMessage}</Alert>}
 
       <Button type="submit" size="lg" fullWidth disabled={pending} className="mt-2">
         {pending ? "Ingresando…" : "Iniciar Sesión en StatProb"}
@@ -77,4 +91,3 @@ export function LoginForm() {
     </form>
   );
 }
-

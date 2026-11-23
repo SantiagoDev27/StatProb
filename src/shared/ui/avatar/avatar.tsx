@@ -11,6 +11,7 @@ const sizeClasses: Record<AvatarSize, string> = {
 type AvatarProps = {
   name: string;
   initials: string;
+  src?: string | null;
   size?: AvatarSize;
   online?: boolean;
   className?: string;
@@ -19,6 +20,7 @@ type AvatarProps = {
 export function Avatar({
   name,
   initials,
+  src,
   size = "sm",
   online = false,
   className,
@@ -34,7 +36,16 @@ export function Avatar({
         className,
       )}
     >
-      <span aria-hidden>{initials}</span>
+      {src ? (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={src}
+          alt={name}
+          className="size-full rounded-[inherit] object-cover"
+        />
+      ) : (
+        <span aria-hidden>{initials}</span>
+      )}
       {online && (
         <span
           aria-hidden
