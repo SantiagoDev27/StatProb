@@ -2,8 +2,8 @@
 
 import { signOut } from "firebase/auth";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { resetDatasetsClientState } from "@/entities/dataset";
 import { useCurrentUser } from "@/entities/user";
 import { firebaseAuth } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
@@ -17,7 +17,6 @@ import {
 } from "@/shared/ui/icons";
 
 export function ProfileMenu() {
-  const router = useRouter();
   const { user } = useCurrentUser();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,9 +47,11 @@ export function ProfileMenu() {
     try {
       await signOut(firebaseAuth);
     } catch {
-      // Ignora errores de cierre de sesión si se entró con el flag admin de pruebas
+      // Ignora errores de cierre de sesión si se entró con el flag local de pruebas
     }
-    router.push(ROUTES.login);
+    resetDatasetsClientState();
+    // Recarga completa hacia /login para limpiar caché del Router, pilas Undo/Redo y estados de React
+    window.location.replace(ROUTES.login);
   }
 
   return (
