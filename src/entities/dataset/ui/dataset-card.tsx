@@ -1,16 +1,24 @@
+"use client";
+
+import { useMemo, useSyncExternalStore } from "react";
 import { ROUTES } from "@/shared/config";
 import { Badge, type BadgeVariant } from "@/shared/ui/badge";
 import { Button, ButtonLink } from "@/shared/ui/button";
 import {
   BarChartIcon,
   ClipboardIcon,
-  DownloadIcon,
   FileEditIcon,
   ListIcon,
-  SlidersIcon,
   TrashIcon,
   TrendChartIcon,
 } from "@/shared/ui/icons";
+import {
+  getCustomParametersServerSnapshot,
+  getCustomParametersSnapshot,
+  mergeDatasetParameters,
+  parseCustomParametersSnapshot,
+  subscribeCustomParameters,
+} from "../lib/custom-parameters-storage";
 import type { Dataset, DatasetKind } from "../model/types";
 
 const kindBadgeVariant: Record<DatasetKind, BadgeVariant> = {
@@ -32,6 +40,19 @@ export function DatasetCard({
   dataset: Dataset;
   onDelete?: (datasetId: string) => void;
 }) {
+  const customRaw = useSyncExternalStore(
+    subscribeCustomParameters,
+    () => getCustomParametersSnapshot(dataset.id),
+    getCustomParametersServerSnapshot,
+  );
+
+  const liveVariablesCount = useMemo(() => {
+    const customParams = parseCustomParametersSnapshot(customRaw);
+    if (customParams.length === 0) return dataset.variablesCount;
+    const merged = mergeDatasetParameters(dataset.parameters, customParams);
+    return Math.max(dataset.variablesCount, merged.length);
+  }, [customRaw, dataset.parameters, dataset.variablesCount]);
+
   return (
     <article className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4 transition-colors hover:border-border-strong">
       <div className="flex items-start justify-between gap-3">
@@ -75,7 +96,7 @@ export function DatasetCard({
             Variables
           </dt>
           <dd className="mt-1 font-mono text-xs font-semibold text-primary">
-            {dataset.variablesCount} variables
+            {liveVariablesCount} {liveVariablesCount === 1 ? "variable" : "variables"}
           </dd>
         </div>
         <div>

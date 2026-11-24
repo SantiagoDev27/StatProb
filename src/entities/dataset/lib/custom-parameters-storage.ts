@@ -24,6 +24,8 @@ const CHANGE_EVENT = "statprob:custom-params-changed";
  * - `activeFirebaseUid !== null`: usuario real autenticado, muestra y persiste SOLO sus datasets en Realtime Database.
  */
 let authSyncInitialized = false;
+let authResolved = false;
+let remoteInitialLoaded = false;
 let activeFirebaseUid: string | null = null;
 let remoteDatasets: Dataset[] = [];
 let remoteDatasetsRawSnapshot = "[]";
@@ -41,6 +43,10 @@ function setRemoteDatasetsState(nextDatasets: Dataset[]): void {
   notifyDatasetSubscribers();
 }
 
+function isDatasetsLoadingNow(): boolean {
+  return !authResolved || (activeFirebaseUid !== null && !remoteInitialLoaded);
+}
+
 /**
  * Limpia completamente el estado local y en memoria de datasets, parámetros
  * y pilas de Deshacer/Rehacer (se invoca al cerrar sesión o cambiar de cuenta).
@@ -51,6 +57,7 @@ export function resetDatasetsClientState(): void {
     unsubscribeRemoteDatasets = null;
   }
   activeFirebaseUid = null;
+  remoteInitialLoaded = false;
   remoteDatasets = [];
   remoteDatasetsRawSnapshot = "[]";
   datasetsUndoStack.clear();
@@ -93,20 +100,24 @@ function ensureAuthDatasetsSync(): void {
       datasetsRedoStack.clear();
     }
 
+    authResolved = true;
     activeFirebaseUid = nextUid;
 
     if (!nextUid) {
+      remoteInitialLoaded = false;
       setRemoteDatasetsState([]);
       return;
     }
 
-    // Iniciamos en lista vacía hasta recibir el snapshot de Realtime Database (sin MOCK_DATASETS)
+    // Esperamos el primer snapshot de Realtime Database sin mostrar MOCK_DATASETS
+    remoteInitialLoaded = false;
     setRemoteDatasetsState([]);
 
     unsubscribeRemoteDatasets = subscribeUserDatasetsInDb(
       nextUid,
       (datasets) => {
         if (activeFirebaseUid === nextUid) {
+          remoteInitialLoaded = true;
           setRemoteDatasetsState(datasets);
         }
       },
@@ -612,12 +623,35 @@ export function deleteDatasetById(datasetId: string): boolean {
   return true;
 }
 
+function getDatasetsLoadingSnapshot(): boolean {
+  if (typeof window === "undefined") return true;
+  ensureAuthDatasetsSync();
+  return isDatasetsLoadingNow();
+}
+
+function getDatasetsLoadingServerSnapshot(): boolean {
+  return true;
+}
+
+/**
+ * Indica si aún se está resolviendo la sesión de Firebase o la carga inicial
+ * de datasets desde Realtime Database.
+ */
+export function useDatasetsLoading(): boolean {
+  return useSyncExternalStore(
+    subscribeCustomParameters,
+    getDatasetsLoadingSnapshot,
+    getDatasetsLoadingServerSnapshot,
+  );
+}
+
 /**
  * Hook reactivo que devuelve la **Lista Doblemente Enlazada (`DoublyLinkedList<Dataset>`)**
  * con todos los datasets activos (solo los del usuario en Realtime Database si está
  * autenticado; o los de prueba si está en modo `local/local`).
  */
 export function useDatasetsLinkedList(): DoublyLinkedList<Dataset> {
+  const isLoading = useDatasetsLoading();
   const authUid = useSyncExternalStore(
     subscribeCustomParameters,
     getAuthUidSnapshot,
@@ -635,11 +669,14 @@ export function useDatasetsLinkedList(): DoublyLinkedList<Dataset> {
   );
 
   return useMemo(() => {
+    if (isLoading) {
+      return new DoublyLinkedList<Dataset>();
+    }
     const customDatasets = parseCustomDatasetsSnapshot(rawDatasets);
     const deletedIds = parseDeletedDatasetIdsSnapshot(rawDeletedIds);
     const isTestUser = authUid.length === 0;
     return buildDatasetsLinkedList(customDatasets, deletedIds, isTestUser);
-  }, [authUid, rawDatasets, rawDeletedIds]);
+  }, [isLoading, authUid, rawDatasets, rawDeletedIds]);
 }
 
 /**
@@ -659,6 +696,7 @@ export function useDatasetById(
   id: string,
   fallbackDataset?: Dataset,
 ): Dataset | undefined {
+  const isLoading = useDatasetsLoading();
   const authUid = useSyncExternalStore(
     subscribeCustomParameters,
     getAuthUidSnapshot,
@@ -666,9 +704,10 @@ export function useDatasetById(
   );
   const linkedList = useDatasetsLinkedList();
   return useMemo(() => {
+    if (isLoading) return undefined;
     const found = linkedList.findNode((d) => d.id === id)?.value;
     if (found) return found;
     // Si es un usuario autenticado, no mostrar datasets mockup como respaldo
     return authUid.length > 0 ? undefined : fallbackDataset;
-  }, [authUid, linkedList, id, fallbackDataset]);
+  }, [isLoading, authUid, linkedList, id, fallbackDataset]);
 }

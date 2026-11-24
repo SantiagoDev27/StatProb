@@ -9,6 +9,7 @@ import {
   parseCustomParametersSnapshot,
   subscribeCustomParameters,
   useDatasetById,
+  useDatasetsLoading,
   type Dataset,
 } from "@/entities/dataset";
 import { ROUTES } from "@/shared/config";
@@ -27,6 +28,7 @@ export function DatasetDiagnosticsView({
 }) {
   const searchParams = useSearchParams();
   const queryParamId = searchParams.get("param");
+  const isLoadingDatasets = useDatasetsLoading();
   const dataset = useDatasetById(datasetId, initialDataset);
 
   const customRaw = useSyncExternalStore(
@@ -62,6 +64,14 @@ export function DatasetDiagnosticsView({
       allParameters[0],
     [allParameters, activeSelectionId],
   );
+
+  if (isLoadingDatasets && !dataset) {
+    return (
+      <div className="rounded-2xl border border-border bg-surface p-8 text-sm text-muted">
+        Cargando panel estadístico…
+      </div>
+    );
+  }
 
   if (!dataset) {
     return (

@@ -1,12 +1,17 @@
 "use client";
 
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import {
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { resetDatasetsClientState } from "@/entities/dataset";
 import { ensureUserRecordInDb } from "@/entities/user";
 import { firebaseAuth, getFirebaseAuthErrorMessage } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
+import { isValidEmail } from "@/shared/lib";
 import { Alert } from "@/shared/ui/alert";
 import { Button } from "@/shared/ui/button";
 import { ArrowRightIcon, UserIcon } from "@/shared/ui/icons";
@@ -16,9 +21,44 @@ import { validateLogin, type LoginErrors } from "../model/validate-login";
 
 export function LoginForm() {
   const router = useRouter();
+  const emailInputRef = useRef<HTMLInputElement>(null);
   const [errors, setErrors] = useState<LoginErrors>({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    function handlePageShow() {
+      setPending(false);
+    }
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
+  async function handleForgotPassword() {
+    setErrorMessage(null);
+    setInfoMessage(null);
+
+    const email = emailInputRef.current?.value.trim() ?? "";
+    if (!isValidEmail(email)) {
+      setErrors({
+        email:
+          "Ingresa un correo electrónico válido para enviar el enlace de recuperación.",
+      });
+      emailInputRef.current?.focus();
+      return;
+    }
+
+    setErrors({});
+    try {
+      await sendPasswordResetEmail(firebaseAuth, email);
+      setInfoMessage(
+        `Si existe una cuenta asociada a ${email}, enviamos un correo para restablecer tu contraseña.`,
+      );
+    } catch (error) {
+      setErrorMessage(getFirebaseAuthErrorMessage(error));
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -27,6 +67,7 @@ export function LoginForm() {
     const password = String(data.get("password") ?? "");
 
     setErrorMessage(null);
+    setInfoMessage(null);
 
     if (isAdminTestLogin(email, password)) {
       setErrors({});
@@ -63,6 +104,7 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
       <InputField
+        ref={emailInputRef}
         label="Correo electrónico"
         name="email"
         type="email"
@@ -81,7 +123,7 @@ export function LoginForm() {
         labelAside={
           <button
             type="button"
-            title="Próximamente"
+            onClick={handleForgotPassword}
             className="text-xs font-medium text-primary hover:underline"
           >
             ¿Olvidaste tu contraseña?
@@ -90,6 +132,7 @@ export function LoginForm() {
       />
 
       {errorMessage && <Alert tone="error">{errorMessage}</Alert>}
+      {infoMessage && <Alert tone="info">{infoMessage}</Alert>}
 
       <Button type="submit" size="lg" fullWidth disabled={pending} className="mt-2">
         {pending ? "Ingresando…" : "Iniciar Sesión en StatProb"}

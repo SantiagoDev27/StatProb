@@ -8,7 +8,7 @@ import { cn } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button, ButtonLink } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
-import { DownloadIcon, FileEditIcon, PlusIcon } from "@/shared/ui/icons";
+import { FileEditIcon, PlusIcon } from "@/shared/ui/icons";
 
 type DatasetParametersTableProps = {
   datasetId: string;
@@ -145,14 +145,6 @@ export function DatasetParametersTable({
                           <FileEditIcon className="size-3.5" />
                           Datos
                         </ButtonLink>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          aria-label={`Descargar ${param.name}`}
-                          className="size-7 px-0 text-muted"
-                        >
-                          <DownloadIcon className="size-3.5" />
-                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -218,14 +210,6 @@ export function DatasetParametersTable({
                         <FileEditIcon className="size-3.5" />
                         Datos
                       </ButtonLink>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        aria-label={`Descargar ${param.name}`}
-                        className="size-7 px-0 text-muted"
-                      >
-                        <DownloadIcon className="size-3.5" />
-                      </Button>
                     </div>
                   </td>
                 </tr>

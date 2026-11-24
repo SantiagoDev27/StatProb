@@ -113,7 +113,7 @@ function normalizeDatasetFromRtdb(
     fileName:
       typeof obj.fileName === "string" && obj.fileName
         ? obj.fileName
-        : `${name}.csv`,
+        : `${name}`,
     sidebarName:
       typeof obj.sidebarName === "string" && obj.sidebarName
         ? obj.sidebarName

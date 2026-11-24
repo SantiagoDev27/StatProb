@@ -7,6 +7,7 @@ import {
   redoDatasetsChange,
   undoDatasetsChange,
   useDatasetsLinkedList,
+  useDatasetsLoading,
   useDatasetsUndoRedo,
   type Dataset,
 } from "@/entities/dataset";
@@ -30,6 +31,7 @@ type DatasetFilter = "all" | "individual" | "grouped" | "recent";
 
 export function DatasetsGrid() {
   // 1. Obtenemos la Lista Doblemente Enlazada (DoublyLinkedList<Dataset>) principal
+  const isLoadingDatasets = useDatasetsLoading();
   const datasetsLinkedList = useDatasetsLinkedList();
   const { canUndo, canRedo, undoCount, redoCount } = useDatasetsUndoRedo();
   const allDatasets = useMemo(
@@ -205,7 +207,16 @@ export function DatasetsGrid() {
         </div>
       </div>
 
-      {filteredDatasets.length === 0 ? (
+      {isLoadingDatasets ? (
+        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {[0, 1, 2].map((idx) => (
+            <div
+              key={idx}
+              className="h-52 animate-pulse rounded-xl border border-border bg-background/50 p-4"
+            />
+          ))}
+        </div>
+      ) : filteredDatasets.length === 0 ? (
         <div className="mt-5 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background/40 py-10 text-center">
           {searchQuery.trim().length > 0 ? (
             <>

@@ -1,7 +1,7 @@
-import { useId, type InputHTMLAttributes, type ReactNode } from "react";
+import { useId, type ComponentPropsWithRef, type ReactNode } from "react";
 import { cn } from "@/shared/lib";
 
-export type InputFieldProps = InputHTMLAttributes<HTMLInputElement> & {
+export type InputFieldProps = ComponentPropsWithRef<"input"> & {
   label: string;
   /** Icono a la izquierda del input. */
   icon?: ReactNode;

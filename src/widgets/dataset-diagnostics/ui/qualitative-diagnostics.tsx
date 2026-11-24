@@ -6,10 +6,8 @@ import {
   type QualitativeParameter,
 } from "@/entities/dataset";
 import { Badge } from "@/shared/ui/badge";
-import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import {
-  DownloadIcon,
   LayersIcon,
   PieChartIcon,
   UsersIcon,
@@ -163,20 +161,14 @@ export function QualitativeDiagnostics({
       {/* Gráficos cualitativos: Barras por categoría + Anillo de proporción */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
         <Card className="flex flex-col justify-between gap-5 p-5 sm:p-6 xl:col-span-7">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold text-foreground">
-                Frecuencia por Categoría ({parameter.name})
-              </h2>
-              <p className="mt-1 text-xs text-muted">
-                Conteo absoluto y peso porcentual de cada clase (sin intervalos
-                numéricos continuos)
-              </p>
-            </div>
-            <Button variant="outline" size="sm" className="h-8 shrink-0 px-2.5 text-xs">
-              <DownloadIcon className="size-3.5" />
-              Descargar
-            </Button>
+          <div>
+            <h2 className="text-base font-semibold text-foreground">
+              Frecuencia por Categoría ({parameter.name})
+            </h2>
+            <p className="mt-1 text-xs text-muted">
+              Conteo absoluto y peso porcentual de cada clase (sin intervalos
+              numéricos continuos)
+            </p>
           </div>
 
           <div className="flex flex-col gap-3.5 rounded-xl border border-border/80 bg-background/60 p-4">

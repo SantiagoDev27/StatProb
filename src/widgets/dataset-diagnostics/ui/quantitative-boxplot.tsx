@@ -1,7 +1,6 @@
 import type { QuantitativeParameter, QuantitativeStats } from "@/entities/dataset";
-import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
-import { ArrowRightIcon, DownloadIcon } from "@/shared/ui/icons";
+import { ArrowRightIcon } from "@/shared/ui/icons";
 
 type QuantitativeBoxplotProps = {
   parameter: QuantitativeParameter;
@@ -19,8 +18,10 @@ export function QuantitativeBoxplot({
   stats,
 }: QuantitativeBoxplotProps) {
   const unitSuffix = parameter.unit ? ` ${parameter.unit}` : "";
-  const span = stats.range > 0 ? stats.range : 1;
-  const toX = (val: number) => PAD_X + ((val - stats.min) / span) * PLOT_W;
+  const toX = (val: number) =>
+    stats.range > 0
+      ? PAD_X + ((val - stats.min) / stats.range) * PLOT_W
+      : PAD_X + PLOT_W / 2;
 
   const wMinX = toX(stats.whiskerMin);
   const wMaxX = toX(stats.whiskerMax);
@@ -29,24 +30,18 @@ export function QuantitativeBoxplot({
   const q3X = toX(stats.q3);
   const meanX = toX(stats.mean);
   const boxW = Math.max(4, q3X - q1X);
+  const boxX = stats.range > 0 ? q1X : medX - boxW / 2;
 
   return (
     <Card className="flex flex-col justify-between gap-4 p-5 sm:p-6">
       {/* Cabecera */}
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-base font-semibold text-foreground">
-            Diagrama de Caja y Bigotes (Boxplot)
-          </h2>
-          <p className="mt-1 text-xs text-muted">
-            Cuartiles Tukey, Rango Intercuartílico (RIC / IQR) y Valores Atípicos
-          </p>
-        </div>
-
-        <Button variant="outline" size="sm" className="h-8 shrink-0 px-2.5 text-xs">
-          <DownloadIcon className="size-3.5" />
-          Descargar
-        </Button>
+      <div>
+        <h2 className="text-base font-semibold text-foreground">
+          Diagrama de Caja y Bigotes (Boxplot)
+        </h2>
+        <p className="mt-1 text-xs text-muted">
+          Cuartiles Tukey, Rango Intercuartílico (RIC / IQR) y Valores Atípicos
+        </p>
       </div>
 
       {/* SVG Boxplot */}
@@ -113,7 +108,7 @@ export function QuantitativeBoxplot({
 
           {/* Caja Q1-Q3 */}
           <rect
-            x={q1X}
+            x={boxX}
             y={CENTER_Y - 24}
             width={boxW}
             height={48}

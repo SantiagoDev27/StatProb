@@ -399,7 +399,7 @@ function ParameterEditorInner({
         name: cleanDatasetName,
         fileName: cleanDatasetName.includes(".")
           ? cleanDatasetName
-          : `${cleanDatasetName}.csv`,
+          : `${cleanDatasetName}`,
         sidebarName:
           cleanDatasetName.length > 22
             ? `${cleanDatasetName.slice(0, 22)}...`

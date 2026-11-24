@@ -2,6 +2,7 @@ export type QuantitativeRow = {
   id: string;
   label: string;
   value: number;
+  rawValue?: string;
 };
 
 export type QualitativeRow = {

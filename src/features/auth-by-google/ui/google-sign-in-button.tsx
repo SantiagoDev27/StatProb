@@ -2,7 +2,7 @@
 
 import { signInWithPopup } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ensureUserRecordInDb } from "@/entities/user";
 import {
   firebaseAuth,
@@ -19,6 +19,14 @@ export function GoogleSignInButton() {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    function handlePageShow() {
+      setPending(false);
+    }
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
 
   async function handleGoogleSignIn() {
     setErrorMessage(null);

@@ -2,7 +2,7 @@
 
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { createUserRecordInDb } from "@/entities/user";
 import { firebaseAuth, getFirebaseAuthErrorMessage } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
@@ -17,6 +17,14 @@ export function RegisterForm() {
   const [errors, setErrors] = useState<RegisterErrors>({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    function handlePageShow() {
+      setPending(false);
+    }
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

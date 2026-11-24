@@ -13,7 +13,6 @@ export {
   ClockIcon,
   CloudUploadIcon,
   ColumnsIcon,
-  DownloadIcon,
   EyeIcon,
   EyeOffIcon,
   FileEditIcon,

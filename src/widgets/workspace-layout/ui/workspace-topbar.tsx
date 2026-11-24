@@ -7,8 +7,6 @@ import { MOCK_WORKSPACE } from "@/entities/workspace";
 import { ProfileMenu } from "@/features/profile-menu";
 import { DatasetSearchBar } from "@/features/search-datasets";
 import { ROUTES } from "@/shared/config";
-import { Button } from "@/shared/ui/button";
-import { DownloadIcon } from "@/shared/ui/icons";
 
 type BreadcrumbItem = {
   label: string;

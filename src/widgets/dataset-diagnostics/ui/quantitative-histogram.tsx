@@ -9,9 +9,8 @@ import {
   type QuantitativeStats,
 } from "@/entities/dataset";
 import { cn } from "@/shared/lib";
-import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
-import { DownloadIcon, InfoIcon } from "@/shared/ui/icons";
+import { InfoIcon } from "@/shared/ui/icons";
 
 type QuantitativeHistogramProps = {
   parameter: QuantitativeParameter;
@@ -148,11 +147,6 @@ export function QuantitativeHistogram({
               );
             })}
           </div>
-
-          <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs">
-            <DownloadIcon className="size-3.5" />
-            Descargar
-          </Button>
         </div>
       </div>
 

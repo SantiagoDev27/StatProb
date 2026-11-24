@@ -7,7 +7,6 @@ import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import {
   CheckCircleIcon,
-  ColumnsIcon,
   InfoIcon,
   PlusIcon,
   TrashIcon,
@@ -76,11 +75,23 @@ export function QuantitativeMatrixEditor({
   }
 
   function handleUpdateValue(id: string, raw: string) {
-    const num = Number(raw);
+    const trimmed = raw.trim();
+    const num = Number(trimmed);
+    const parsedValue = trimmed !== "" && Number.isFinite(num) ? num : 0;
     onChangeRows(
       rows.map((r) =>
-        r.id === id ? { ...r, value: Number.isFinite(num) ? num : 0 } : r,
+        r.id === id ? { ...r, value: parsedValue, rawValue: raw } : r,
       ),
+    );
+  }
+
+  function handleBlurValue(id: string) {
+    const target = rows.find((r) => r.id === id);
+    if (!target || target.rawValue === undefined) return;
+    const normalized = String(target.value);
+    if (target.rawValue === normalized) return;
+    onChangeRows(
+      rows.map((r) => (r.id === id ? { ...r, rawValue: normalized } : r)),
     );
   }
 
@@ -171,12 +182,13 @@ export function QuantitativeMatrixEditor({
                       </td>
                       <td className="py-2.5 px-3 text-right">
                         <input
-                          type="number"
-                          step="any"
-                          value={row.value}
+                          type="text"
+                          inputMode="decimal"
+                          value={row.rawValue ?? String(row.value)}
                           onChange={(e) =>
                             handleUpdateValue(row.id, e.target.value)
                           }
+                          onBlur={() => handleBlurValue(row.id)}
                           onKeyDown={(e) => handleCellKeyDown(e, idx)}
                           aria-label={`Valor numérico fila ${idx + 1}`}
                           className="h-8 w-32 rounded-md border border-transparent bg-transparent px-2 text-right font-mono text-xs font-semibold text-foreground outline-none transition-colors hover:border-border focus:border-primary/60 focus:bg-background/80"
@@ -300,7 +312,19 @@ export function QuantitativeMatrixEditor({
               <span className="uppercase tracking-wider text-muted">
                 Perfil de distribución preliminar
               </span>
-              <span className="text-primary">Normalidad ~ 94.2%</span>
+              <span className="text-primary">
+                {stats.count < 3
+                  ? "Muestra pequeña (N < 3)"
+                  : `Normalidad ~ ${Math.max(
+                      5,
+                      Math.min(
+                        99.5,
+                        100 -
+                          Math.abs(stats.skewness) * 18 -
+                          Math.abs(stats.kurtosis - 3) * 8,
+                      ),
+                    ).toFixed(1)}%`}
+              </span>
             </div>
 
             <svg
