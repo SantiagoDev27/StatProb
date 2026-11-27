@@ -1,6 +1,6 @@
 export {
   DatasetDetailPage as default,
-  generateDatasetDetailMetadata as generateMetadata,
+  datasetDetailMetadata as metadata,
   generateDatasetStaticParams as generateStaticParams,
 } from "@/_pages/dataset-detail";
 

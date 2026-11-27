@@ -10,6 +10,7 @@ import {
   googleAuthProvider,
 } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
+import { setAuthSessionCookie } from "@/shared/lib";
 import { Alert } from "@/shared/ui/alert";
 import { Button } from "@/shared/ui/button";
 import { GoogleIcon } from "@/shared/ui/icons";
@@ -35,6 +36,7 @@ export function GoogleSignInButton() {
     try {
       const credential = await signInWithPopup(firebaseAuth, googleAuthProvider);
       await ensureUserRecordInDb(credential.user);
+      setAuthSessionCookie("firebase");
       router.push(ROUTES.main);
     } catch (error) {
       setErrorMessage(getFirebaseAuthErrorMessage(error));

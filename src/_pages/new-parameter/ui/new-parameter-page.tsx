@@ -7,19 +7,9 @@ export function generateNewParameterStaticParams() {
   return MOCK_DATASETS.map((dataset) => ({ id: dataset.id }));
 }
 
-export async function generateNewParameterMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}): Promise<Metadata> {
-  const { id } = await params;
-  const dataset = findDatasetById(id);
-  return {
-    title: dataset
-      ? `Ingreso Manual · ${dataset.fileName}`
-      : "Ingreso Manual de Datos",
-  };
-}
+export const newParameterMetadata: Metadata = {
+  title: "Ingreso Manual de Datos",
+};
 
 export async function NewParameterPage({
   params,

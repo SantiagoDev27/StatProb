@@ -7,17 +7,9 @@ export function generateDatasetStaticParams() {
   return MOCK_DATASETS.map((dataset) => ({ id: dataset.id }));
 }
 
-export async function generateDatasetDetailMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}): Promise<Metadata> {
-  const { id } = await params;
-  const dataset = findDatasetById(id);
-  return {
-    title: dataset ? dataset.fileName : "Panel Estadístico de Dataset",
-  };
-}
+export const datasetDetailMetadata: Metadata = {
+  title: "Panel Estadístico de Dataset",
+};
 
 export async function DatasetDetailPage({
   params,

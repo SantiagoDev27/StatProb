@@ -6,6 +6,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { createUserRecordInDb } from "@/entities/user";
 import { firebaseAuth, getFirebaseAuthErrorMessage } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
+import { setAuthSessionCookie } from "@/shared/lib";
 import { Alert } from "@/shared/ui/alert";
 import { Button } from "@/shared/ui/button";
 import { ArrowRightIcon, UserIcon } from "@/shared/ui/icons";
@@ -46,6 +47,7 @@ export function RegisterForm() {
         password,
       );
       await createUserRecordInDb(credential.user, email);
+      setAuthSessionCookie("firebase");
       router.push(ROUTES.main);
     } catch (error) {
       setErrorMessage(getFirebaseAuthErrorMessage(error));

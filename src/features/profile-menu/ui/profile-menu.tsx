@@ -7,7 +7,7 @@ import { resetDatasetsClientState } from "@/entities/dataset";
 import { useCurrentUser } from "@/entities/user";
 import { firebaseAuth } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
-import { cn } from "@/shared/lib";
+import { clearAuthSessionCookie, cn } from "@/shared/lib";
 import { Avatar } from "@/shared/ui/avatar";
 import { Badge } from "@/shared/ui/badge";
 import {
@@ -49,6 +49,7 @@ export function ProfileMenu() {
     } catch {
       // Ignora errores de cierre de sesión si se entró con el flag local de pruebas
     }
+    clearAuthSessionCookie();
     resetDatasetsClientState();
     // Recarga completa hacia /login para limpiar caché del Router, pilas Undo/Redo y estados de React
     window.location.replace(ROUTES.login);

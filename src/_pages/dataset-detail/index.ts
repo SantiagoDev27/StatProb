@@ -1,6 +1,6 @@
 export {
   DatasetDetailPage,
-  generateDatasetDetailMetadata,
+  datasetDetailMetadata,
   generateDatasetStaticParams,
 } from "./ui/dataset-detail-page";
 

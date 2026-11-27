@@ -11,7 +11,7 @@ import { resetDatasetsClientState } from "@/entities/dataset";
 import { ensureUserRecordInDb } from "@/entities/user";
 import { firebaseAuth, getFirebaseAuthErrorMessage } from "@/shared/api";
 import { ROUTES } from "@/shared/config";
-import { isValidEmail } from "@/shared/lib";
+import { isValidEmail, setAuthSessionCookie } from "@/shared/lib";
 import { Alert } from "@/shared/ui/alert";
 import { Button } from "@/shared/ui/button";
 import { ArrowRightIcon, UserIcon } from "@/shared/ui/icons";
@@ -78,6 +78,7 @@ export function LoginForm() {
         // Ignorar si no había sesión activa
       }
       resetDatasetsClientState();
+      setAuthSessionCookie("local");
       router.push(ROUTES.main);
       return;
     }
@@ -94,6 +95,7 @@ export function LoginForm() {
         password,
       );
       await ensureUserRecordInDb(credential.user);
+      setAuthSessionCookie("firebase");
       router.push(ROUTES.main);
     } catch (error) {
       setErrorMessage(getFirebaseAuthErrorMessage(error));
