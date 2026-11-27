@@ -19,7 +19,7 @@ export function TermsPage() {
       <SiteHeader />
       <main className="mx-auto flex w-full max-w-4xl flex-col gap-12 px-6 py-12">
         <LegalDocument
-          meta="Última actualización: Noviembre de 2026 · DOC. REF: ST-TRS-2026"
+          meta="Última actualización: Noviembre de 2026"
           title="Términos y Condiciones de Servicio"
           intro={
             <p>
