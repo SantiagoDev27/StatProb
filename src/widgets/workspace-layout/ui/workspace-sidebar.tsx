@@ -3,8 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { useAllDatasets } from "@/entities/dataset";
-import { MOCK_WORKSPACE } from "@/entities/workspace";
+import {
+  formatStorageBytes,
+  getJsonByteSize,
+  MAX_STORAGE_BYTES,
+  MAX_STORAGE_LABEL,
+  useAllDatasets,
+  useDatasetsStorageBytes,
+} from "@/entities/dataset";
+import { useCurrentUser } from "@/entities/user";
 import { ROUTES } from "@/shared/config";
 import { cn } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
@@ -20,8 +27,18 @@ import {
 export function WorkspaceSidebar() {
   const pathname = usePathname();
   const allDatasets = useAllDatasets();
+  const datasetsBytes = useDatasetsStorageBytes();
+  const { user } = useCurrentUser();
   const [isDatasetsOpen, setIsDatasetsOpen] = useState(true);
   const recentSidebarDatasets = allDatasets.slice(0, 4);
+
+  const photoBytes = user.photoUrl ? getJsonByteSize(user.photoUrl) : 0;
+  const totalUsedBytes = datasetsBytes + photoBytes;
+  const usagePct = Math.min(100, (totalUsedBytes / MAX_STORAGE_BYTES) * 100);
+  const formattedUsed = formatStorageBytes(totalUsedBytes);
+
+  const statusLevel =
+    usagePct >= 90 ? "danger" : usagePct >= 70 ? "warning" : "normal";
 
   const isGraphsActive =
     pathname === ROUTES.graphs || pathname.startsWith(`${ROUTES.graphs}/`);
@@ -149,16 +166,71 @@ export function WorkspaceSidebar() {
         </Link>
       </nav>
 
-      {/* Indicador de almacenamiento */}
+      {/* Indicador funcional de almacenamiento (límite 10 MB) */}
       <div className="p-3">
-        <div className="flex items-center justify-between rounded-lg border border-border bg-surface px-3 py-2.5 font-mono text-[11px]">
-          <span className="flex items-center gap-2 text-muted">
-            <span className="size-2 rounded-full bg-success" aria-hidden />
-            Almacenamiento:
-          </span>
-          <span className="font-medium text-primary">
-            {MOCK_WORKSPACE.storageUsed} / {MOCK_WORKSPACE.storageLimit}
-          </span>
+        <div
+          title={`Datasets: ${formatStorageBytes(datasetsBytes)} · Perfil: ${formatStorageBytes(photoBytes)} (${usagePct.toFixed(1)}% de ${MAX_STORAGE_LABEL})`}
+          className="flex flex-col gap-2 rounded-lg border border-border bg-surface px-3 py-2.5 font-mono text-[11px]"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2 text-muted">
+              <span
+                className={cn(
+                  "size-2 rounded-full",
+                  statusLevel === "danger"
+                    ? "bg-danger"
+                    : statusLevel === "warning"
+                      ? "bg-amber-400"
+                      : "bg-success",
+                )}
+                aria-hidden
+              />
+              Almacenamiento:
+            </span>
+            <span
+              className={cn(
+                "font-medium",
+                statusLevel === "danger"
+                  ? "text-danger"
+                  : statusLevel === "warning"
+                    ? "text-amber-400"
+                    : "text-primary",
+              )}
+            >
+              {formattedUsed} / {MAX_STORAGE_LABEL}
+            </span>
+          </div>
+
+          <div
+            role="progressbar"
+            aria-label="Uso de almacenamiento"
+            aria-valuenow={Math.round(usagePct)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            className="h-1.5 w-full overflow-hidden rounded-full bg-background/80"
+          >
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-300",
+                statusLevel === "danger"
+                  ? "bg-danger"
+                  : statusLevel === "warning"
+                    ? "bg-amber-400"
+                    : "bg-primary",
+              )}
+              style={{
+                width: `${totalUsedBytes > 0 ? Math.max(2, usagePct) : 0}%`,
+              }}
+            />
+          </div>
+
+          {statusLevel === "danger" && (
+            <p className="text-[10px] text-danger">
+              {totalUsedBytes >= MAX_STORAGE_BYTES
+                ? "Límite de 10 MB alcanzado. Elimina un dataset para liberar espacio."
+                : "Espacio casi lleno (> 90 % usado)."}
+            </p>
+          )}
         </div>
       </div>
     </aside>

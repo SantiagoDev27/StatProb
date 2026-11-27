@@ -19,6 +19,7 @@ import {
   parseCustomParametersSnapshot,
   subscribeCustomParameters,
 } from "../lib/custom-parameters-storage";
+import { formatStorageBytes, getJsonByteSize } from "../lib/storage-quota";
 import type { Dataset, DatasetKind } from "../model/types";
 
 const kindBadgeVariant: Record<DatasetKind, BadgeVariant> = {
@@ -46,12 +47,26 @@ export function DatasetCard({
     getCustomParametersServerSnapshot,
   );
 
-  const liveVariablesCount = useMemo(() => {
+  const { liveVariablesCount, liveSizeLabel } = useMemo(() => {
     const customParams = parseCustomParametersSnapshot(customRaw);
-    if (customParams.length === 0) return dataset.variablesCount;
-    const merged = mergeDatasetParameters(dataset.parameters, customParams);
-    return Math.max(dataset.variablesCount, merged.length);
-  }, [customRaw, dataset.parameters, dataset.variablesCount]);
+    const effectiveDataset =
+      customParams.length > 0
+        ? {
+            ...dataset,
+            parameters: mergeDatasetParameters(dataset.parameters, customParams),
+          }
+        : dataset;
+
+    const variablesCount =
+      customParams.length > 0
+        ? Math.max(dataset.variablesCount, effectiveDataset.parameters.length)
+        : dataset.variablesCount;
+
+    return {
+      liveVariablesCount: variablesCount,
+      liveSizeLabel: formatStorageBytes(getJsonByteSize(effectiveDataset)),
+    };
+  }, [customRaw, dataset]);
 
   return (
     <article className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4 transition-colors hover:border-border-strong">
@@ -104,7 +119,7 @@ export function DatasetCard({
             Peso
           </dt>
           <dd className="mt-1 font-mono text-xs font-semibold text-foreground">
-            {dataset.sizeLabel}
+            {liveSizeLabel}
           </dd>
         </div>
       </dl>

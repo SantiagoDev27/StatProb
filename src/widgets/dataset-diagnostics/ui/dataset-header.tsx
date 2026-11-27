@@ -1,4 +1,9 @@
-import type { Dataset, DatasetParameter } from "@/entities/dataset";
+import {
+  formatStorageBytes,
+  getJsonByteSize,
+  type Dataset,
+  type DatasetParameter,
+} from "@/entities/dataset";
 import { ROUTES } from "@/shared/config";
 import { Badge } from "@/shared/ui/badge";
 import { Button, ButtonLink } from "@/shared/ui/button";
@@ -25,6 +30,10 @@ export function DatasetHeader({
   onSelectParameter,
   onRecalculate,
 }: DatasetHeaderProps) {
+  const liveSizeLabel = formatStorageBytes(
+    getJsonByteSize({ ...dataset, parameters }),
+  );
+
   return (
     <Card className="p-6">
       <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-start">
@@ -46,7 +55,7 @@ export function DatasetHeader({
               registros
             </Badge>
             <Badge variant="neutral">
-              {dataset.format} · {dataset.sizeLabel}
+              {dataset.format} · {liveSizeLabel}
             </Badge>
           </div>
 

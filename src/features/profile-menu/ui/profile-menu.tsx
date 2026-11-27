@@ -151,14 +151,6 @@ export function ProfileMenu() {
               <ChevronRightIcon className="size-4 shrink-0 text-muted" />
             </button>
           </div>
-
-          {/* Pie de estado */}
-          <div className="flex items-center justify-between border-t border-border bg-background/60 px-4 py-2 font-mono text-[10px]">
-            <span className="text-muted">
-              StatProb Cloud: {user.cloudRegion}
-            </span>
-            <span className="text-success">Latencia: {user.latencyMs}ms</span>
-          </div>
         </div>
       )}
     </div>

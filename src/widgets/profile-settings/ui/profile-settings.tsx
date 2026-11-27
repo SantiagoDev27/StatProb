@@ -99,10 +99,6 @@ export function ProfileSettings() {
             </p>
           </div>
 
-          <div className="inline-flex shrink-0 items-center gap-2 self-start rounded-lg border border-border bg-surface px-3 py-1.5 font-mono text-[11px] text-muted">
-            <span className="size-2 rounded-full bg-success" aria-hidden />
-            <span>Entorno sinc: {user.syncEnvironment}</span>
-          </div>
         </div>
       </div>
 

@@ -10,18 +10,24 @@ import {
   useSyncExternalStore,
 } from "react";
 import {
+  formatStorageBytes,
   getCustomParametersServerSnapshot,
   getCustomParametersSnapshot,
+  getJsonByteSize,
+  MAX_STORAGE_BYTES,
+  MAX_STORAGE_LABEL,
   mergeDatasetParameters,
   parseCustomParametersSnapshot,
   saveCustomDataset,
   saveCustomParameter,
   subscribeCustomParameters,
   useDatasetById,
+  useDatasetsStorageBytes,
   type Dataset,
   type DatasetParameter,
   type ParameterType,
 } from "@/entities/dataset";
+import { useCurrentUser } from "@/entities/user";
 import { ROUTES } from "@/shared/config";
 import { cn, UndoRedoHistory } from "@/shared/lib";
 import { Alert } from "@/shared/ui/alert";
@@ -123,6 +129,10 @@ function ParameterEditorInner({
 }) {
   const router = useRouter();
   const seqRef = useRef(100);
+  const datasetsBytes = useDatasetsStorageBytes();
+  const { user } = useCurrentUser();
+  const totalUsedBytes =
+    datasetsBytes + (user.photoUrl ? getJsonByteSize(user.photoUrl) : 0);
 
   // Estado unificado de presente + Pila de Deshacer (undoStack) y Pila de Rehacer (redoStack)
   const [editorHistory, setEditorHistory] = useState<{
@@ -413,13 +423,36 @@ function ParameterEditorInner({
         kind: "individual",
         sampleSize: obsCount.toLocaleString("en-US"),
         variablesCount: 1,
-        sizeLabel: `${Math.max(1, Math.round(obsCount * 0.4))} KB`,
+        sizeLabel: "0 KB",
         hasSecondaryAction: true,
         parameters: [savedParam],
       };
 
+      const newDatasetBytes = getJsonByteSize(newDataset);
+      newDataset.sizeLabel = formatStorageBytes(newDatasetBytes);
+
+      if (totalUsedBytes + newDatasetBytes > MAX_STORAGE_BYTES) {
+        setError(
+          `Límite de almacenamiento (${MAX_STORAGE_LABEL}) alcanzado. Elimina un dataset o reduce datos antes de guardar.`,
+        );
+        return;
+      }
+
       saveCustomDataset(newDataset);
       router.push(ROUTES.main);
+      return;
+    }
+
+    const prevParamBytes = editingParameter
+      ? getJsonByteSize(editingParameter)
+      : 0;
+    const nextParamBytes = getJsonByteSize(savedParam);
+    const deltaBytes = Math.max(0, nextParamBytes - prevParamBytes);
+
+    if (totalUsedBytes + deltaBytes > MAX_STORAGE_BYTES) {
+      setError(
+        `Límite de almacenamiento (${MAX_STORAGE_LABEL}) alcanzado. Reduce observaciones o elimina otro dataset.`,
+      );
       return;
     }
 

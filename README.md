@@ -4,6 +4,11 @@
 
 El proyecto está construido con **Next.js 16 (App Router + Turbopack)**, **React 19**, **TypeScript**, **Tailwind CSS 4** y **Firebase (Authentication + Realtime Database)**, organizado estrictamente bajo la arquitectura **Feature-Sliced Design (FSD)**.
 
+## Enlaces del Proyecto
+
+- **Aplicación en Producción:** [Gestión de Datasets · StatProb](https://stat-prob.vercel.app/main)
+- **Diseño UI/UX en Figma:** [StatProb Early Version (Figma)](https://www.figma.com/design/FFmjsERzMacqxNBqg61YuY/StatProb-Early-version?node-id=0-1&t=KyZPOuf2oqBByEoK-1)
+
 ---
 
 ## Funcionalidades Principales

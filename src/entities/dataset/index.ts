@@ -57,4 +57,12 @@ export {
   saveDatasetInDb,
   subscribeUserDatasetsInDb,
 } from "./lib/dataset-db";
+export {
+  computeDatasetsStorageBytes,
+  formatStorageBytes,
+  getJsonByteSize,
+  MAX_STORAGE_BYTES,
+  MAX_STORAGE_LABEL,
+  useDatasetsStorageBytes,
+} from "./lib/storage-quota";
 export { DatasetCard } from "./ui/dataset-card";

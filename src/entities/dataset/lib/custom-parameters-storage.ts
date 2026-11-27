@@ -6,6 +6,7 @@ import { firebaseAuth } from "@/shared/api";
 import { DoublyLinkedList, Stack } from "@/shared/lib";
 import { MOCK_DATASETS } from "../model/mock-datasets";
 import type { Dataset, DatasetParameter } from "../model/types";
+import { formatStorageBytes, getJsonByteSize } from "./storage-quota";
 import {
   deleteDatasetInDb,
   replaceAllDatasetsInDb,
@@ -472,7 +473,9 @@ export function saveCustomParameter(
       parameters: updatedParameters,
       variablesCount: updatedParameters.length,
       sampleSize: obsCount.toLocaleString("en-US"),
-      sizeLabel: `${Math.max(1, Math.round(obsCount * updatedParameters.length * 0.4))} KB`,
+      sizeLabel: formatStorageBytes(
+        getJsonByteSize({ ...targetDataset, parameters: updatedParameters }),
+      ),
     };
 
     const nextList = remoteDatasets.map((d) =>

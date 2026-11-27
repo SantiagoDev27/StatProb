@@ -12,7 +12,7 @@ export const MOCK_WORKSPACE: WorkspaceInfo = {
   shortName: "Laboratorio Cuantitativo",
   datasetsCount: 6,
   graphsCount: 6,
-  storageUsed: "384 MB",
-  storageLimit: "10 GB",
+  storageUsed: "0 B",
+  storageLimit: "10 MB",
 };
 
